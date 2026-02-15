@@ -1,3 +1,7 @@
+TRUNCATE livre_type,
+livre_genre,
+auteur RESTART identity CASCADE;
+
 INSERT INTO
     livre_type (id, TYPE)
 VALUES

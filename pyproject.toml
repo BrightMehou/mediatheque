@@ -5,8 +5,18 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "faker>=40.4.0",
+    "fastapi[standard]>=0.129.0",
     "pandas>=2.3.3",
     "psycopg2-binary>=2.9.11",
     "sqlalchemy>=2.0.46",
     "streamlit>=1.54.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.1",
+]
+
+[tool.ruff.lint]
+select = ["E","F","I"]
