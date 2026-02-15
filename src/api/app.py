@@ -32,3 +32,18 @@ def load_types() -> list[str]:
     with engine.connect() as connection:
         df = pd.read_sql(text(query), connection)
     return df['type'].tolist()
+
+@app.get("/livres")
+def load_livres(limit: int = 100) -> list[dict]:
+    query = f"""
+    SELECT l.id, l.titre, a.pseudonyme as auteur, l.date_publication, lt.type
+    FROM livre l
+    JOIN auteur a ON l.auteur_id = a.id
+    JOIN livre_type lt ON l.type_id = lt.id
+    ORDER BY l.titre
+    LIMIT {limit};
+    """
+    with engine.connect() as connection:
+        df = pd.read_sql(text(query), connection)
+    
+    return df.to_dict(orient='records')
