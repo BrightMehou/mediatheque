@@ -3,13 +3,6 @@ import requests
 import os
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
-
-
-@st.cache_data
-def load_genres() -> list[str]:
-    response = requests.get(f"{API_BASE_URL}/genres")
-    response.raise_for_status()
-    return response.json()
     
 @st.cache_data
 def load_types() -> list[str]:
@@ -17,20 +10,23 @@ def load_types() -> list[str]:
     response.raise_for_status()
     return response.json()
 
+def load_livres(types: list[str] = None) -> list[dict]:
+    params = {}
+    if types:
+        params["types"] = types
+    response = requests.get(f"{API_BASE_URL}/livres", params=params)
+    response.raise_for_status()
+    return response.json()
+
 st.title("📚 Gestion de Bibliothèque")
 
 try:
-    genres, types = load_genres(), load_types()
-    genre_selectionne = st.selectbox(
-        "Choisissez un genre littéraire :",
-        options=genres,
-    )
-    type_selectionne = st.selectbox(
+    types = load_types()
+    type_selectionnes = st.multiselect(
         "Choisissez un type de livre :",
         options=types,
     )
-    st.write(f"Vous avez sélectionné le genre : **{genre_selectionne}**")
-    st.write(f"Vous avez sélectionné le type : **{type_selectionne}**")
-
+    livres = load_livres(types=type_selectionnes)
+    st.dataframe(livres)
 except Exception as e:
-    st.error(f"Erreur de connexion à la base de données : {e}")
+    st.error(f"Erreur: {e}")

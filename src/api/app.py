@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
+from typing import List, Dict
 from sqlalchemy import create_engine, text
 import pandas as pd
 import os
@@ -14,19 +15,11 @@ DB_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:543
 engine = create_engine(DB_URL)
 
 @app.get("/")
-async def root() -> dict[str, str]:
+async def root() -> Dict[str, str]:
     return {"msg": "API de la médiathèque opérationnelle ✅"}
 
-@app.get("/genres")
-def load_genres() -> list[str]:
-    query = "SELECT genre FROM livre_genre ORDER BY genre;"
-    
-    with engine.connect() as connection:
-        df = pd.read_sql(text(query), connection)
-    return df['genre'].tolist()
-
 @app.get("/types")
-def load_types() -> list[str]:
+def load_types() -> List[str]:
     query = "SELECT type FROM livre_type ORDER BY type;"
     
     with engine.connect() as connection:
@@ -34,15 +27,20 @@ def load_types() -> list[str]:
     return df['type'].tolist()
 
 @app.get("/livres")
-def load_livres(limit: int = 100) -> list[dict]:
-    query = f"""
-    SELECT l.id, l.titre, a.pseudonyme as auteur, l.date_publication, lt.type
+def load_livres(types: List[str] = Query(default=None)) -> List[dict]:
+
+    query = """
+    SELECT l.id, l.titre, a.pseudonyme AS auteur, l.date_publication, lt.type
     FROM livre l
     JOIN auteur a ON l.auteur_id = a.id
     JOIN livre_type lt ON l.type_id = lt.id
-    ORDER BY l.titre
-    LIMIT {limit};
     """
+    if not types:
+        query += " ORDER BY l.titre LIMIT 100"
+    else:
+        types = ",".join(f"'{x}'" for x in types)
+        query += f" WHERE lt.type IN ({types}) ORDER BY l.titre LIMIT 100"
+
     with engine.connect() as connection:
         df = pd.read_sql(text(query), connection)
     
