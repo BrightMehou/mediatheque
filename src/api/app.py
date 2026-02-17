@@ -27,19 +27,25 @@ def load_types() -> List[str]:
     return df['type'].tolist()
 
 @app.get("/livres")
-def load_livres(types: List[str] = Query(default=None)) -> List[dict]:
+def load_livres(types: List[str] = Query(default=None), auteur: str = None) -> List[dict]:
 
     query = """
     SELECT l.id, l.titre, a.pseudonyme AS auteur, l.date_publication, lt.type
     FROM livre l
     JOIN auteur a ON l.auteur_id = a.id
     JOIN livre_type lt ON l.type_id = lt.id
+    WHERE 1=1
     """
-    if not types:
-        query += " ORDER BY l.titre LIMIT 100"
-    else:
-        types = ",".join(f"'{x}'" for x in types)
-        query += f" WHERE lt.type IN ({types}) ORDER BY l.titre LIMIT 100"
+
+    if types:
+        type_list = ", ".join(f"'{t}'" for t in types)
+        query += f" AND lt.type IN ({type_list})"
+
+    if auteur:
+        query += f" AND a.pseudonyme ilike '%{auteur}%'"
+
+
+    query += " LIMIT 100;"
 
     with engine.connect() as connection:
         df = pd.read_sql(text(query), connection)
