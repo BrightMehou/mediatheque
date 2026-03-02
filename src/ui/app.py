@@ -1,14 +1,17 @@
-import streamlit as st
-import requests
 import os
 
+import requests
+import streamlit as st
+
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
-    
+
+
 @st.cache_data
 def load_types() -> list[str]:
-    response = requests.get(f"{API_BASE_URL}/types")
+    response = requests.get(f"{API_BASE_URL}/livre_types")
     response.raise_for_status()
     return response.json()
+
 
 def load_livres(types: list[str] = None, auteur: str = None) -> list[dict]:
     params = {}
@@ -19,6 +22,7 @@ def load_livres(types: list[str] = None, auteur: str = None) -> list[dict]:
     response = requests.get(f"{API_BASE_URL}/livres", params=params)
     response.raise_for_status()
     return response.json()
+
 
 st.set_page_config(page_title="Médiathèque", page_icon="📚", layout="wide")
 st.title("📚 Médiathèque")

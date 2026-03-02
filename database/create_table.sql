@@ -1,17 +1,17 @@
 CREATE TABLE IF NOT EXISTS auteur (
-    id integer PRIMARY KEY,
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nom varchar,
     prenom varchar,
     pseudonyme varchar NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS livre_type (
-    id integer PRIMARY KEY,
-    TYPE varchar NOT NULL
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    TYPE varchar NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS livre (
-    id integer PRIMARY KEY,
+    id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     auteur_id integer REFERENCES auteur(id) NOT NULL,
     titre varchar NOT NULL,
     isbn varchar NOT NULL,
