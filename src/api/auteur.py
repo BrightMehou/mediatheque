@@ -1,11 +1,11 @@
 import os
-
-from fastapi import APIRouter
 from typing import Dict, List
-from sqlalchemy import create_engine, text
-import pandas as pd
 
-auteur_router = APIRouter(prefix="/auteurs", tags=["auteurs"])
+import pandas as pd
+from fastapi import APIRouter
+from sqlalchemy import create_engine, text
+
+auteur_router = APIRouter(prefix="/auteur", tags=["auteur"])
 
 DB_URL = os.getenv(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres"

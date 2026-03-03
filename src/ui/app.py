@@ -8,7 +8,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 @st.cache_data
 def load_types() -> list[str]:
-    response = requests.get(f"{API_BASE_URL}/livre_types")
+    response = requests.get(f"{API_BASE_URL}/livre_type")
     response.raise_for_status()
     return response.json()
 
@@ -19,7 +19,7 @@ def load_livres(types: list[str] = None, auteur: str = None) -> list[dict]:
         params["types"] = types
     if auteur:
         params["auteur"] = auteur
-    response = requests.get(f"{API_BASE_URL}/livres", params=params)
+    response = requests.get(f"{API_BASE_URL}/livre", params=params)
     response.raise_for_status()
     return response.json()
 
@@ -31,7 +31,7 @@ try:
     types = load_types()
     type_selectionnes = st.multiselect(
         "Choisissez un type de livre :",
-        options=types,
+        options=[t["type"] for t in types]
     )
     auteur = st.text_input("Auteur (pseudonyme)")
     livres = load_livres(types=type_selectionnes, auteur=auteur)
