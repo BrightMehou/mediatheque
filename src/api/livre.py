@@ -1,9 +1,21 @@
 import os
 from typing import Dict, List
-
+from datetime import date
 import pandas as pd
 from fastapi import APIRouter, Query
 from sqlalchemy import create_engine, text
+from pydantic import BaseModel
+
+class LivreBase(BaseModel):
+    auteur_id: int
+    titre: str
+    isbn: str
+    date_publication: date
+    type_id: int
+    nb_pages: int
+
+class Livre(LivreBase):
+    id: int
 
 livre_router = APIRouter(prefix="/livre", tags=["livre"])
 

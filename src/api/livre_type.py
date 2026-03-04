@@ -2,7 +2,14 @@ import os
 from typing import Dict, List
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import create_engine, text
+
+
+class LivreType(BaseModel):
+    id: int
+    type: str
+
 
 livre_type_router = APIRouter(prefix="/livre_type", tags=["livre_type"])
 
@@ -14,7 +21,7 @@ engine = create_engine(DB_URL)
 
 
 @livre_type_router.get("/")
-def get_livre_types() -> List[Dict]:
+def get_livre_types() -> List[LivreType]:
     query = "SELECT id, type FROM livre_type ORDER BY type;"
     with engine.connect() as conn:
         result = conn.execute(text(query))
@@ -23,7 +30,7 @@ def get_livre_types() -> List[Dict]:
 
 
 @livre_type_router.get("/{livre_type_id}")
-def get_livre_type(livre_type_id: int) -> Dict:
+def get_livre_type(livre_type_id: int) -> LivreType:
     query = "SELECT id, type FROM livre_type WHERE id = :livre_type_id;"
     with engine.connect() as conn:
         result = conn.execute(text(query), {"livre_type_id": livre_type_id})
