@@ -1,18 +1,20 @@
 import os
-from typing import Dict, List
 from datetime import date
+from typing import Dict, List
+
 import pandas as pd
 from fastapi import APIRouter, Query
-from sqlalchemy import create_engine, text
 from pydantic import BaseModel
+from sqlalchemy import create_engine, text
 
 class LivreBase(BaseModel):
-    auteur_id: int
     titre: str
+    auteur: int
     isbn: str
     date_publication: date
-    type_id: int
+    type: str
     nb_pages: int
+
 
 class Livre(LivreBase):
     id: int
@@ -20,7 +22,7 @@ class Livre(LivreBase):
 livre_router = APIRouter(prefix="/livre", tags=["livre"])
 
 DB_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
 )
 
 engine = create_engine(DB_URL)

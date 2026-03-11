@@ -14,7 +14,7 @@ class LivreType(BaseModel):
 livre_type_router = APIRouter(prefix="/livre_type", tags=["livre_type"])
 
 DB_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres"
+    "DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
 )
 
 engine = create_engine(DB_URL)
