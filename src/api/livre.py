@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 
+
 class LivreBase(BaseModel):
     titre: str
     auteur: int

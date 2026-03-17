@@ -9,6 +9,20 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-
+  app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DATABASE_URL=postgresql+psycopg://postgres:postgres@postgres:5432/postgres
+    depends_on:
+      postgres:
+          condition: service_started
 volumes:
   postgres_data:

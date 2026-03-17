@@ -1,4 +1,5 @@
 import logging
+import os
 
 import psycopg
 from faker import Faker
@@ -12,7 +13,13 @@ fake = Faker("fr_FR")
 Faker.seed(42)
 
 logger.info("Connexion à la base de données...")
-dsn = "dbname=postgres user=postgres password=postgres host=localhost port=5432"
+
+DB_NAME= os.getenv("DB_NAME", "postgres")
+DB_USER= os.getenv("DB_USER", "postgres")
+DB_PASSWORD= os.getenv("DB_PASSWORD", "postgres")
+DB_HOST= os.getenv("DB_HOST", "postgres")
+DB_PORT= os.getenv("DB_PORT", "5432")
+DSN = f"dbname={DB_NAME} user={DB_USER} password={DB_PASSWORD} host={DB_HOST} port={DB_PORT}"
 
 LIVRE_TYPES = [
     ("Roman",),
@@ -29,7 +36,13 @@ LIVRE_TYPES = [
     ("Art / Illustration",),
 ]
 
-with psycopg.connect(dsn) as conn, conn.cursor() as cur:
+with psycopg.connect(DSN) as conn, conn.cursor() as cur:
+
+    logger.info("Création des tables...")
+
+    with open("database/create_table.sql", "r", encoding="utf-8") as f:
+        create_table = f.read()
+    cur.execute(create_table)
 
     logger.info("Truncating tables...")
     cur.execute("TRUNCATE TABLE livre, auteur, livre_type RESTART IDENTITY CASCADE")
