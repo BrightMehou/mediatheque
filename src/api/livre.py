@@ -20,6 +20,7 @@ class LivreBase(BaseModel):
 class Livre(LivreBase):
     id: int
 
+
 livre_router = APIRouter(prefix="/livre", tags=["livre"])
 
 DB_URL = os.getenv(
