@@ -15,7 +15,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY . /app
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev
+    uv sync --frozen --no-dev
 
 ENV PATH="/app/.venv/bin:$PATH"
 

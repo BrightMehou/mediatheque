@@ -8,7 +8,7 @@ from src.api.livre_type import livre_type_router
 
 app = FastAPI(
     title="Médiathèque API",
-    description="API pour la gestion d'une médiathèque",
+    description="API pour la gestion de la médiathèque",
     version="0.2.0",
 )
 
