@@ -8,18 +8,8 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
-
 fake = Faker("fr_FR")
 Faker.seed(42)
-
-logger.info("Connexion à la base de données...")
-
-DB_NAME= os.getenv("DB_NAME", "postgres")
-DB_USER= os.getenv("DB_USER", "postgres")
-DB_PASSWORD= os.getenv("DB_PASSWORD", "postgres")
-DB_HOST= os.getenv("DB_HOST", "postgres")
-DB_PORT= os.getenv("DB_PORT", "5432")
-DSN = f"dbname={DB_NAME} user={DB_USER} password={DB_PASSWORD} host={DB_HOST} port={DB_PORT}"
 
 LIVRE_TYPES = [
     ("Roman",),
@@ -36,42 +26,48 @@ LIVRE_TYPES = [
     ("Art / Illustration",),
 ]
 
-with psycopg.connect(DSN) as conn, conn.cursor() as cur:
-
-    logger.info("Création des tables...")
-
-    with open("database/create_table.sql", "r", encoding="utf-8") as f:
-        create_table = f.read()
-    cur.execute(create_table)
-
-    logger.info("Truncating tables...")
-    cur.execute("TRUNCATE TABLE livre, auteur, livre_type RESTART IDENTITY CASCADE")
-
-    logger.info("Insertion des types de livres")
-    cur.executemany("INSERT INTO livre_type (type) VALUES (%s)", LIVRE_TYPES)
-
-    logger.info("Insertion des auteurs")
-    cur.executemany(
-        "INSERT INTO auteur (nom, prenom, pseudonyme) VALUES (%s, %s, %s)",
-        [(fake.last_name(), fake.first_name(), fake.user_name()) for _ in range(10)],
-    )
-
-    logger.info("Insertion des livres")
-    cur.executemany(
-        """INSERT INTO livre
-        (auteur_id, titre, isbn, date_publication, type_id, nb_pages)
-        VALUES (%s, %s, %s, %s, %s, %s)""",
-        [
-            (
-                fake.random_int(min=1, max=10),
-                fake.sentence(),
-                fake.isbn13(),
-                fake.date_between(start_date="-10y", end_date="today"),
-                fake.random_int(min=1, max=12),
-                fake.random_int(min=50, max=500),
-            )
-            for _ in range(100)
-        ],
-    )
-
-logger.info("Deconnexion de la base de données...")
+if __name__ == "__main__":
+    logger.info("Connexion à la base de données...")
+    with (
+        psycopg.connect(
+            dbname=os.getenv("DB_NAME", "postgres"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASSWORD", "postgres"),
+            host=os.getenv("DB_HOST", "postgres"),
+            port=os.getenv("DB_PORT", "5432"),
+        ) as conn,
+        conn.cursor() as cur,
+    ):
+        logger.info("Création des tables...")
+        with open("database/create_table.sql", "r", encoding="utf-8") as f:
+            cur.execute(f.read())
+        logger.info("Truncating tables...")
+        cur.execute("TRUNCATE TABLE livre, auteur, livre_type RESTART IDENTITY CASCADE")
+        logger.info("Insertion des types de livres")
+        cur.executemany("INSERT INTO livre_type (type) VALUES (%s)", LIVRE_TYPES)
+        logger.info("Insertion des auteurs")
+        cur.executemany(
+            "INSERT INTO auteur (nom, prenom, pseudonyme) VALUES (%s, %s, %s)",
+            [
+                (fake.last_name(), fake.first_name(), fake.user_name())
+                for _ in range(10)
+            ],
+        )
+        logger.info("Insertion des livres")
+        cur.executemany(
+            """INSERT INTO livre
+            (auteur_id, titre, isbn, date_publication, type_id, nb_pages)
+            VALUES (%s, %s, %s, %s, %s, %s)""",
+            [
+                (
+                    fake.random_int(min=1, max=10),
+                    fake.sentence(),
+                    fake.isbn13(),
+                    fake.date_between(start_date="-10y", end_date="today"),
+                    fake.random_int(min=1, max=12),
+                    fake.random_int(min=50, max=500),
+                )
+                for _ in range(100)
+            ],
+        )
+    logger.info("Deconnexion de la base de données...")
