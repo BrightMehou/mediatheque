@@ -13,7 +13,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 @st.cache_data
 def load_types() -> list[str]:
-    response = requests.get(f"{API_BASE_URL}/livre_type")
+    response = requests.get(f"{API_BASE_URL}/book_type")
     response.raise_for_status()
     return response.json()
 
@@ -22,7 +22,7 @@ def load_types() -> list[str]:
 def create_type():
     new_type = st.text_input("Type de livre")
     if st.button("Ajouter"):
-        response = requests.post(f"{API_BASE_URL}/livre_type/?type={new_type}")
+        response = requests.post(f"{API_BASE_URL}/book_type/?type={new_type}")
         response.raise_for_status()
         logging.info(response.json())
         load_types.clear()
@@ -48,7 +48,7 @@ try:
             if submitted:
                 with st.spinner("Modification en cours..."):
                     response = requests.put(
-                        f"{API_BASE_URL}/livre_type/{record['id']}?type={new_type}"
+                        f"{API_BASE_URL}/book_type/{record['id']}?type={new_type}"
                     )
                     response.raise_for_status()
                     logging.info(response.json())

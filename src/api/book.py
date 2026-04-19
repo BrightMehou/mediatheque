@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 
 
-class LivreBase(BaseModel):
+class BookBase(BaseModel):
     titre: str
     auteur: int
     isbn: str
@@ -17,11 +17,11 @@ class LivreBase(BaseModel):
     nb_pages: int
 
 
-class Livre(LivreBase):
+class Book(BookBase):
     id: int
 
 
-livre_router = APIRouter(prefix="/livre", tags=["livre"])
+book_router = APIRouter(prefix="/book", tags=["book"])
 
 DB_URL = os.getenv(
     "DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -57,16 +57,16 @@ def validate_isbn(isbn: str) -> bool:
     return False
 
 
-@livre_router.get("/")
-def load_livres(
+@book_router.get("/")
+def load_books(
     types: List[str] = Query(default=None), auteur: str = None
 ) -> List[Dict]:
 
     query = """
     SELECT l.id, l.titre, a.pseudonyme AS auteur, l.date_publication, lt.type
-    FROM livre l
-    JOIN auteur a ON l.auteur_id = a.id
-    JOIN livre_type lt ON l.type_id = lt.id
+    FROM book l
+    JOIN author a ON l.auteur_id = a.id
+    JOIN book_type lt ON l.type_id = lt.id
     WHERE 1=1
     """
 
@@ -85,88 +85,88 @@ def load_livres(
     return df.to_dict(orient="records")
 
 
-@livre_router.post("/")
-def create_livre(livre: LivreBase) -> Dict[str, str]:
-    type_query = "SELECT id FROM livre_type WHERE type = :type;"
+@book_router.post("/")
+def create_book(book: BookBase) -> Dict[str, str]:
+    type_query = "SELECT id FROM book_type WHERE type = :type;"
     insert_query = """
-    INSERT INTO livre (auteur_id, titre, isbn, date_publication, type_id, nb_pages)
+    INSERT INTO book (auteur_id, titre, isbn, date_publication, type_id, nb_pages)
     VALUES (:auteur_id, :titre, :isbn, :date_publication, :type_id, :nb_pages);
     """
 
-    if not validate_isbn(livre.isbn):
+    if not validate_isbn(book.isbn):
         raise HTTPException(
             status_code=422, detail="ISBN invalide ou format non supporté."
         )
 
     with engine.connect() as connection:
-        type_result = connection.execute(text(type_query), {"type": livre.type})
+        type_result = connection.execute(text(type_query), {"type": book.type})
         type_row = type_result.fetchone()
         if type_row is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Type de livre '{livre.type}' introuvable.",
+                detail=f"Type de livre '{book.type}' introuvable.",
             )
         connection.execute(
             text(insert_query),
             {
-                "auteur_id": livre.auteur,
-                "titre": livre.titre,
-                "isbn": livre.isbn,
-                "date_publication": livre.date_publication,
+                "auteur_id": book.auteur,
+                "titre": book.titre,
+                "isbn": book.isbn,
+                "date_publication": book.date_publication,
                 "type_id": type_row._mapping["id"],
-                "nb_pages": livre.nb_pages,
+                "nb_pages": book.nb_pages,
             },
         )
         connection.commit()
 
-    return {"message": f"Livre '{livre.titre}' créé avec succès."}
+    return {"message": f"Livre '{book.titre}' créé avec succès."}
 
 
-@livre_router.put("/{livre_id}")
-def update_livre(livre_id: int, livre: LivreBase) -> Dict[str, str]:
-    type_query = "SELECT id FROM livre_type WHERE type = :type;"
+@book_router.put("/{book_id}")
+def update_book(book_id: int, book: BookBase) -> Dict[str, str]:
+    type_query = "SELECT id FROM book_type WHERE type = :type;"
     update_query = """
-    UPDATE livre
+    UPDATE book
     SET auteur_id = :auteur_id,
         titre = :titre,
         isbn = :isbn,
         date_publication = :date_publication,
         type_id = :type_id,
         nb_pages = :nb_pages
-    WHERE id = :livre_id;
+    WHERE id = :book_id;
     """
 
-    if not validate_isbn(livre.isbn):
+    if not validate_isbn(book.isbn):
         raise HTTPException(
             status_code=422, detail="ISBN invalide ou format non supporté."
         )
 
     with engine.connect() as connection:
-        type_result = connection.execute(text(type_query), {"type": livre.type})
+        type_result = connection.execute(text(type_query), {"type": book.type})
         type_row = type_result.fetchone()
         if type_row is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Type de livre '{livre.type}' introuvable.",
+                detail=f"Type de livre '{book.type}' introuvable.",
             )
 
         result = connection.execute(
             text(update_query),
             {
-                "auteur_id": livre.auteur,
-                "titre": livre.titre,
-                "isbn": livre.isbn,
-                "date_publication": livre.date_publication,
+                "auteur_id": book.auteur,
+                "titre": book.titre,
+                "isbn": book.isbn,
+                "date_publication": book.date_publication,
                 "type_id": type_row._mapping["id"],
-                "nb_pages": livre.nb_pages,
-                "livre_id": livre_id,
+                "nb_pages": book.nb_pages,
+                "book_id": book_id,
             },
         )
         connection.commit()
     if result.rowcount == 0:
         raise HTTPException(
             status_code=404,
-            detail=f"Aucun livre trouvé avec l'ID {livre_id}.",
+            detail=f"Aucun livre trouvé avec l'ID {book_id}.",
         )
 
-    return {"message": f"Livre avec l'ID {livre_id} mis à jour avec succès."}
+    return {"message": f"Livre avec l'ID {book_id} mis à jour avec succès."}

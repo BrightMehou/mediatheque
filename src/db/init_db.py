@@ -33,7 +33,7 @@ if __name__ == "__main__":
             dbname=os.getenv("DB_NAME", "postgres"),
             user=os.getenv("DB_USER", "postgres"),
             password=os.getenv("DB_PASSWORD", "postgres"),
-            host=os.getenv("DB_HOST", "postgres"),
+            host=os.getenv("DB_HOST", "localhost"),
             port=os.getenv("DB_PORT", "5432"),
         ) as conn,
         conn.cursor() as cur,
@@ -42,12 +42,12 @@ if __name__ == "__main__":
         with open("database/create_table.sql", "r", encoding="utf-8") as f:
             cur.execute(f.read())
         logger.info("Truncating tables...")
-        cur.execute("TRUNCATE TABLE livre, auteur, livre_type RESTART IDENTITY CASCADE")
+        cur.execute("TRUNCATE TABLE book, author, book_type RESTART IDENTITY CASCADE")
         logger.info("Insertion des types de livres")
-        cur.executemany("INSERT INTO livre_type (type) VALUES (%s)", LIVRE_TYPES)
+        cur.executemany("INSERT INTO book_type (type) VALUES (%s)", LIVRE_TYPES)
         logger.info("Insertion des auteurs")
         cur.executemany(
-            "INSERT INTO auteur (nom, prenom, pseudonyme) VALUES (%s, %s, %s)",
+            "INSERT INTO author (nom, prenom, pseudonyme) VALUES (%s, %s, %s)",
             [
                 (fake.last_name(), fake.first_name(), fake.user_name())
                 for _ in range(10)
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         )
         logger.info("Insertion des livres")
         cur.executemany(
-            """INSERT INTO livre
+            """INSERT INTO book
             (auteur_id, titre, isbn, date_publication, type_id, nb_pages)
             VALUES (%s, %s, %s, %s, %s, %s)""",
             [

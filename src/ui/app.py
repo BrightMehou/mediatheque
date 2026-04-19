@@ -8,18 +8,18 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 @st.cache_data
 def load_types() -> list[str]:
-    response = requests.get(f"{API_BASE_URL}/livre_type")
+    response = requests.get(f"{API_BASE_URL}/book_type")
     response.raise_for_status()
     return response.json()
 
 
-def load_livres(types: list[str] = None, auteur: str = None) -> list[dict]:
+def load_books(types: list[str] = None, auteur: str = None) -> list[dict]:
     params = {}
     if types:
         params["types"] = types
     if auteur:
         params["auteur"] = auteur
-    response = requests.get(f"{API_BASE_URL}/livre", params=params)
+    response = requests.get(f"{API_BASE_URL}/book", params=params)
     response.raise_for_status()
     return response.json()
 
@@ -33,7 +33,7 @@ try:
         "Choisissez un type de livre :", options=[t["type"] for t in types]
     )
     auteur = st.text_input("Auteur (pseudonyme)")
-    livres = load_livres(types=type_selectionnes, auteur=auteur)
+    livres = load_books(types=type_selectionnes, auteur=auteur)
     st.dataframe(livres)
 except Exception as e:
     st.error(f"Erreur: {e}")
