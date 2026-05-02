@@ -17,11 +17,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY pyproject.toml uv.lock /app/
 COPY src/ /app/src/
 COPY database/ /app/database/
-COPY init_app.sh /init_app.sh
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
 EXPOSE 8000
 
-ENTRYPOINT ["/bin/bash", "/init_app.sh"]
+ENTRYPOINT []
