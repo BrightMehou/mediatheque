@@ -1,9 +1,10 @@
-import os
 from typing import Dict, List
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
+
+from src.db.connection import engine
 
 
 class BookType(BaseModel):
@@ -13,12 +14,6 @@ class BookType(BaseModel):
 
 book_type_router = APIRouter(prefix="/book_type", tags=["book_type"])
 
-DB_URL = os.getenv(
-    "DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
-)
-
-engine = create_engine(DB_URL)
-
 
 @book_type_router.get("/")
 def get_book_types() -> List[BookType]:
@@ -27,19 +22,6 @@ def get_book_types() -> List[BookType]:
         result = conn.execute(text(query))
         book_types = [dict(row._mapping) for row in result.fetchall()]
     return book_types
-
-
-@book_type_router.get("/{book_type_id}")
-def get_book_type(book_type_id: int) -> BookType:
-    query = "SELECT id, type FROM book_type WHERE id = :book_type_id;"
-    with engine.connect() as conn:
-        result = conn.execute(text(query), {"book_type_id": book_type_id})
-    if result.rowcount == 0:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Aucun type de livre trouvé avec l'ID {book_type_id}.",
-        )
-    return result.fetchone()._asdict()
 
 
 @book_type_router.post("/")

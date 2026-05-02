@@ -1,9 +1,10 @@
-import os
 from typing import Dict, List
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
+
+from src.db.connection import engine
 
 
 class AuthorBase(BaseModel):
@@ -17,12 +18,6 @@ class Author(AuthorBase):
 
 
 author_router = APIRouter(prefix="/author", tags=["author"])
-
-DB_URL = os.getenv(
-    "DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
-)
-
-engine = create_engine(DB_URL)
 
 
 @author_router.get("/")

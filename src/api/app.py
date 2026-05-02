@@ -1,10 +1,12 @@
 from typing import Dict
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from sqlalchemy import text
 
 from src.api.author import author_router
 from src.api.book import book_router
 from src.api.book_type import book_type_router
+from src.db.connection import engine
 
 app = FastAPI(
     title="Médiathèque API",
@@ -20,3 +22,13 @@ app.include_router(book_router)
 @app.get("/")
 async def root() -> Dict[str, str]:
     return {"msg": "API de la médiathèque opérationnelle ✅"}
+
+
+@app.get("/health")
+def health_check() -> Dict[str, str]:
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"DB inaccessible: {exc}")
+    return {"status": "ok", "db": "ok"}

@@ -1,11 +1,12 @@
-import os
 from datetime import date
 from typing import Dict, List
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
+
+from src.db.connection import engine
 
 
 class BookBase(BaseModel):
@@ -22,12 +23,6 @@ class Book(BookBase):
 
 
 book_router = APIRouter(prefix="/book", tags=["book"])
-
-DB_URL = os.getenv(
-    "DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
-)
-
-engine = create_engine(DB_URL)
 
 
 def validate_isbn(isbn: str) -> bool:
