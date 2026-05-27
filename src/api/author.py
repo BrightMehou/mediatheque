@@ -8,9 +8,9 @@ from src.db.connection import engine
 
 
 class AuthorBase(BaseModel):
-    nom: str | None = None
-    prenom: str | None = None
-    pseudonyme: str
+    last_name: str | None = None
+    first_name: str | None = None
+    pseudonym: str
 
 
 class Author(AuthorBase):
@@ -22,7 +22,9 @@ author_router = APIRouter(prefix="/author", tags=["author"])
 
 @author_router.get("/")
 def get_authors() -> List[Author]:
-    query = "SELECT id, nom, prenom, pseudonyme FROM author ORDER BY nom;"
+    query = (
+        "SELECT id, last_name, first_name, pseudonym FROM author ORDER BY last_name;"
+    )
     with engine.connect() as connection:
         result = connection.execute(text(query))
         authors = [dict(row._mapping) for row in result.fetchall()]
@@ -31,7 +33,9 @@ def get_authors() -> List[Author]:
 
 @author_router.get("/{author_id}")
 def get_author(author_id: int) -> Author:
-    query = "SELECT id, nom, prenom, pseudonyme FROM author WHERE id = :author_id;"
+    query = (
+        "SELECT id, last_name, first_name, pseudonym FROM author WHERE id = :author_id;"
+    )
     with engine.connect() as connection:
         result = connection.execute(text(query), {"author_id": author_id})
     if result.rowcount == 0:
@@ -42,20 +46,20 @@ def get_author(author_id: int) -> Author:
 
 
 @author_router.post("/")
-def create_author(auteur: AuthorBase) -> Dict[str, str]:
-    query = "INSERT INTO author (nom, prenom, pseudonyme) VALUES (:nom, :prenom, :pseudonyme);"
+def create_author(author: AuthorBase) -> Dict[str, str]:
+    query = "INSERT INTO author (last_name, first_name, pseudonym) VALUES (:last_name, :first_name, :pseudonym);"
     with engine.connect() as connection:
-        connection.execute(text(query), auteur.model_dump())
+        connection.execute(text(query), author.model_dump())
         connection.commit()
-    return {"message": f"Auteur '{auteur.pseudonyme}' créé avec succès."}
+    return {"message": f"Auteur '{author.pseudonym}' créé avec succès."}
 
 
 @author_router.put("/{author_id}")
-def update_author(author_id: int, auteur: AuthorBase) -> Dict[str, str]:
-    query = "UPDATE author SET nom = :nom, prenom = :prenom, pseudonyme = :pseudonyme WHERE id = :author_id;"
+def update_author(author_id: int, author: AuthorBase) -> Dict[str, str]:
+    query = "UPDATE author SET last_name = :last_name, first_name = :first_name, pseudonym = :pseudonym WHERE id = :author_id;"
     with engine.connect() as connection:
         result = connection.execute(
-            text(query), {**auteur.model_dump(), "author_id": author_id}
+            text(query), {**author.model_dump(), "author_id": author_id}
         )
         connection.commit()
     if result.rowcount == 0:

@@ -13,12 +13,12 @@ def load_types() -> list[str]:
     return response.json()
 
 
-def load_books(types: list[str] = None, auteur: str = None) -> list[dict]:
+def load_books(types: list[str] = None, author: str = None) -> list[dict]:
     params = {}
     if types:
         params["types"] = types
-    if auteur:
-        params["auteur"] = auteur
+    if author:
+        params["author"] = author
     response = requests.get(f"{API_BASE_URL}/book", params=params)
     response.raise_for_status()
     return response.json()
@@ -32,8 +32,8 @@ try:
     type_selectionnes = st.multiselect(
         "Choisissez un type de livre :", options=[t["type"] for t in types]
     )
-    auteur = st.text_input("Auteur (pseudonyme)")
-    livres = load_books(types=type_selectionnes, auteur=auteur)
+    author = st.text_input("Auteur (pseudonyme)")
+    livres = load_books(types=type_selectionnes, author=author)
     st.dataframe(livres)
 except Exception as e:
     st.error(f"Erreur: {e}")

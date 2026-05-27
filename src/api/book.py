@@ -10,12 +10,12 @@ from src.db.connection import engine
 
 
 class BookBase(BaseModel):
-    titre: str
-    auteur: int
+    title: str
+    author: int
     isbn: str
-    date_publication: date
+    publication_date: date
     type: str
-    nb_pages: int
+    page_count: int
 
 
 class Book(BookBase):
@@ -54,13 +54,13 @@ def validate_isbn(isbn: str) -> bool:
 
 @book_router.get("/")
 def load_books(
-    types: List[str] = Query(default=None), auteur: str = None
+    types: List[str] = Query(default=None), author: str = None
 ) -> List[Dict]:
 
     query = """
-    SELECT l.id, l.titre, a.pseudonyme AS auteur, l.date_publication, lt.type
+    SELECT l.id, l.title, a.pseudonym AS author, l.publication_date, lt.type
     FROM book l
-    JOIN author a ON l.auteur_id = a.id
+    JOIN author a ON l.author_id = a.id
     JOIN book_type lt ON l.type_id = lt.id
     WHERE 1=1
     """
@@ -69,8 +69,8 @@ def load_books(
         type_list = ", ".join(f"'{t}'" for t in types)
         query += f" AND lt.type IN ({type_list})"
 
-    if auteur:
-        query += f" AND a.pseudonyme ilike '%{auteur}%'"
+    if author:
+        query += f" AND a.pseudonym ilike '%{author}%'"
 
     query += " LIMIT 100;"
 
@@ -84,8 +84,8 @@ def load_books(
 def create_book(book: BookBase) -> Dict[str, str]:
     type_query = "SELECT id FROM book_type WHERE type = :type;"
     insert_query = """
-    INSERT INTO book (auteur_id, titre, isbn, date_publication, type_id, nb_pages)
-    VALUES (:auteur_id, :titre, :isbn, :date_publication, :type_id, :nb_pages);
+    INSERT INTO book (author_id, title, isbn, publication_date, type_id, page_count)
+    VALUES (:author_id, :title, :isbn, :publication_date, :type_id, :page_count);
     """
 
     if not validate_isbn(book.isbn):
@@ -104,17 +104,17 @@ def create_book(book: BookBase) -> Dict[str, str]:
         connection.execute(
             text(insert_query),
             {
-                "auteur_id": book.auteur,
-                "titre": book.titre,
+                "author_id": book.author,
+                "title": book.title,
                 "isbn": book.isbn,
-                "date_publication": book.date_publication,
+                "publication_date": book.publication_date,
                 "type_id": type_row._mapping["id"],
-                "nb_pages": book.nb_pages,
+                "page_count": book.page_count,
             },
         )
         connection.commit()
 
-    return {"message": f"Livre '{book.titre}' créé avec succès."}
+    return {"message": f"Livre '{book.title}' créé avec succès."}
 
 
 @book_router.put("/{book_id}")
@@ -122,12 +122,12 @@ def update_book(book_id: int, book: BookBase) -> Dict[str, str]:
     type_query = "SELECT id FROM book_type WHERE type = :type;"
     update_query = """
     UPDATE book
-    SET auteur_id = :auteur_id,
-        titre = :titre,
+    SET author_id = :author_id,
+        title = :title,
         isbn = :isbn,
-        date_publication = :date_publication,
+        publication_date = :publication_date,
         type_id = :type_id,
-        nb_pages = :nb_pages
+        page_count = :page_count
     WHERE id = :book_id;
     """
 
@@ -148,12 +148,12 @@ def update_book(book_id: int, book: BookBase) -> Dict[str, str]:
         result = connection.execute(
             text(update_query),
             {
-                "auteur_id": book.auteur,
-                "titre": book.titre,
+                "author_id": book.author,
+                "title": book.title,
                 "isbn": book.isbn,
-                "date_publication": book.date_publication,
+                "publication_date": book.publication_date,
                 "type_id": type_row._mapping["id"],
-                "nb_pages": book.nb_pages,
+                "page_count": book.page_count,
                 "book_id": book_id,
             },
         )

@@ -47,7 +47,7 @@ if __name__ == "__main__":
         cur.executemany("INSERT INTO book_type (type) VALUES (%s)", LIVRE_TYPES)
         logger.info("Insertion des auteurs")
         cur.executemany(
-            "INSERT INTO author (nom, prenom, pseudonyme) VALUES (%s, %s, %s)",
+            "INSERT INTO author (last_name, first_name, pseudonym) VALUES (%s, %s, %s)",
             [
                 (fake.last_name(), fake.first_name(), fake.user_name())
                 for _ in range(10)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         logger.info("Insertion des livres")
         cur.executemany(
             """INSERT INTO book
-            (auteur_id, titre, isbn, date_publication, type_id, nb_pages)
+            (author_id, title, isbn, publication_date, type_id, page_count)
             VALUES (%s, %s, %s, %s, %s, %s)""",
             [
                 (
