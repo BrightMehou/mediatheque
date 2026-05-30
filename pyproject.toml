@@ -1,6 +1,6 @@
 [project]
 name = "mediatheque"
-version = "0.1.0"
+version = "0.2.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -10,7 +10,7 @@ dependencies = [
     "pandas>=2.3.3",
     "psycopg[binary]>=3.3.3",
     "sqlalchemy>=2.0.46",
-    "streamlit>=1.55.0",
+    "streamlit>=1.57.0",
 ]
 
 [dependency-groups]

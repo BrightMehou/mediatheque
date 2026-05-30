@@ -62,7 +62,7 @@ if __name__ == "__main__":
                 (
                     fake.random_int(min=1, max=10),
                     fake.sentence(),
-                    fake.isbn13(),
+                    fake.isbn13(separator=""),
                     fake.date_between(start_date="-10y", end_date="today"),
                     fake.random_int(min=1, max=12),
                     fake.random_int(min=50, max=500),
