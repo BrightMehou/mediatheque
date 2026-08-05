@@ -1,7 +1,6 @@
 import logging
 import os
 
-import pandas as pd
 import requests
 import streamlit as st
 
@@ -35,13 +34,16 @@ try:
     if st.button("Ajouter un type de livre"):
         create_type()
     livre_types = load_types()
-    df = pd.DataFrame(livre_types)
     event = st.dataframe(
-        df, on_select="rerun", selection_mode="single-row", column_order=("type",)
+        livre_types,
+        on_select="rerun",
+        selection_mode="single-row",
+        column_order=("type",),
     )
     row = event.selection.rows
     if row:
-        record = df.iloc[row].to_dict(orient="records")[0]
+        selected_index = row[0]
+        record = livre_types[selected_index]
         with st.form("Modifier le type de livre"):
             new_type = st.text_input("Type de livre", value=record["type"])
             submitted = st.form_submit_button("Modifier")

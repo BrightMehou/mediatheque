@@ -1,13 +1,13 @@
 from datetime import date
 from typing import Dict, List
 
-import pandas as pd
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from pydantic_extra_types.isbn import ISBN
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
-from src.db.connection import engine
+from src.db.connection import get_db
 
 
 class BookBase(BaseModel):
@@ -30,6 +30,7 @@ book_router = APIRouter(prefix="/book", tags=["book"])
 def load_books(
     types: List[str] = Query(default=None),
     author: str = None,
+    connection: Connection = Depends(get_db),
 ) -> List[Dict]:
 
     query = """
@@ -49,14 +50,14 @@ def load_books(
 
     query += " LIMIT 100;"
 
-    with engine.connect() as connection:
-        df = pd.read_sql(text(query), connection)
-
-    return df.to_dict(orient="records")
+    result = connection.execute(text(query))
+    return [dict(row._mapping) for row in result]
 
 
 @book_router.post("/")
-def create_book(book: BookBase) -> Dict[str, str]:
+def create_book(
+    book: BookBase, connection: Connection = Depends(get_db)
+) -> Dict[str, str]:
     type_query = "SELECT id FROM book_type WHERE type = :type;"
 
     insert_query = """
@@ -78,39 +79,40 @@ def create_book(book: BookBase) -> Dict[str, str]:
     );
     """
 
-    with engine.connect() as connection:
-        type_result = connection.execute(
-            text(type_query),
-            {"type": book.type},
+    type_result = connection.execute(
+        text(type_query),
+        {"type": book.type},
+    )
+
+    type_row = type_result.fetchone()
+
+    if type_row is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Type de livre '{book.type}' introuvable.",
         )
 
-        type_row = type_result.fetchone()
+    connection.execute(
+        text(insert_query),
+        {
+            "author_id": book.author,
+            "title": book.title,
+            "isbn": str(book.isbn),
+            "publication_date": book.publication_date,
+            "type_id": type_row._mapping["id"],
+            "page_count": book.page_count,
+        },
+    )
 
-        if type_row is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Type de livre '{book.type}' introuvable.",
-            )
-
-        connection.execute(
-            text(insert_query),
-            {
-                "author_id": book.author,
-                "title": book.title,
-                "isbn": str(book.isbn),
-                "publication_date": book.publication_date,
-                "type_id": type_row._mapping["id"],
-                "page_count": book.page_count,
-            },
-        )
-
-        connection.commit()
+    connection.commit()
 
     return {"message": f"Livre '{book.title}' créé avec succès."}
 
 
 @book_router.put("/{book_id}")
-def update_book(book_id: int, book: BookBase) -> Dict[str, str]:
+def update_book(
+    book_id: int, book: BookBase, connection: Connection = Depends(get_db)
+) -> Dict[str, str]:
     type_query = "SELECT id FROM book_type WHERE type = :type;"
 
     update_query = """
@@ -124,34 +126,33 @@ def update_book(book_id: int, book: BookBase) -> Dict[str, str]:
     WHERE id = :book_id;
     """
 
-    with engine.connect() as connection:
-        type_result = connection.execute(
-            text(type_query),
-            {"type": book.type},
+    type_result = connection.execute(
+        text(type_query),
+        {"type": book.type},
+    )
+
+    type_row = type_result.fetchone()
+
+    if type_row is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Type de livre '{book.type}' introuvable.",
         )
 
-        type_row = type_result.fetchone()
+    result = connection.execute(
+        text(update_query),
+        {
+            "author_id": book.author,
+            "title": book.title,
+            "isbn": str(book.isbn),
+            "publication_date": book.publication_date,
+            "type_id": type_row._mapping["id"],
+            "page_count": book.page_count,
+            "book_id": book_id,
+        },
+    )
 
-        if type_row is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Type de livre '{book.type}' introuvable.",
-            )
-
-        result = connection.execute(
-            text(update_query),
-            {
-                "author_id": book.author,
-                "title": book.title,
-                "isbn": str(book.isbn),
-                "publication_date": book.publication_date,
-                "type_id": type_row._mapping["id"],
-                "page_count": book.page_count,
-                "book_id": book_id,
-            },
-        )
-
-        connection.commit()
+    connection.commit()
 
     if result.rowcount == 0:
         raise HTTPException(

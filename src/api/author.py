@@ -1,10 +1,11 @@
 from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
-from src.db.connection import engine
+from src.db.connection import get_db
 
 
 class AuthorBase(BaseModel):
@@ -21,23 +22,21 @@ author_router = APIRouter(prefix="/author", tags=["author"])
 
 
 @author_router.get("/")
-def get_authors() -> List[Author]:
+def get_authors(connection: Connection = Depends(get_db)) -> List[Author]:
     query = (
         "SELECT id, first_name, last_name, pseudonym FROM author ORDER BY last_name;"
     )
-    with engine.connect() as connection:
-        result = connection.execute(text(query))
-        authors = [dict(row._mapping) for row in result.fetchall()]
+    result = connection.execute(text(query))
+    authors = [dict(row._mapping) for row in result.fetchall()]
     return authors
 
 
 @author_router.get("/{author_id}")
-def get_author(author_id: int) -> Author:
+def get_author(author_id: int, connection: Connection = Depends(get_db)) -> Author:
     query = (
         "SELECT id, first_name, last_name, pseudonym FROM author WHERE id = :author_id;"
     )
-    with engine.connect() as connection:
-        result = connection.execute(text(query), {"author_id": author_id})
+    result = connection.execute(text(query), {"author_id": author_id})
     if result.rowcount == 0:
         raise HTTPException(
             status_code=404, detail=f"Aucun auteur trouvé avec l'ID {author_id}."
@@ -46,22 +45,24 @@ def get_author(author_id: int) -> Author:
 
 
 @author_router.post("/")
-def create_author(author: AuthorBase) -> Dict[str, str]:
+def create_author(
+    author: AuthorBase, connection: Connection = Depends(get_db)
+) -> Dict[str, str]:
     query = "INSERT INTO author (first_name, last_name, pseudonym) VALUES (:first_name, :last_name, :pseudonym);"
-    with engine.connect() as connection:
-        connection.execute(text(query), author.model_dump())
-        connection.commit()
+    connection.execute(text(query), author.model_dump())
+    connection.commit()
     return {"message": f"Auteur '{author.pseudonym}' créé avec succès."}
 
 
 @author_router.put("/{author_id}")
-def update_author(author_id: int, author: AuthorBase) -> Dict[str, str]:
+def update_author(
+    author_id: int, author: AuthorBase, connection: Connection = Depends(get_db)
+) -> Dict[str, str]:
     query = "UPDATE author SET first_name = :first_name, last_name = :last_name, pseudonym = :pseudonym WHERE id = :author_id;"
-    with engine.connect() as connection:
-        result = connection.execute(
-            text(query), {**author.model_dump(), "author_id": author_id}
-        )
-        connection.commit()
+    result = connection.execute(
+        text(query), {**author.model_dump(), "author_id": author_id}
+    )
+    connection.commit()
     if result.rowcount == 0:
         raise HTTPException(
             status_code=404, detail=f"Aucun auteur trouvé avec l'ID {author_id}."
