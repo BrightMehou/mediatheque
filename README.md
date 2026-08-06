@@ -17,3 +17,14 @@ Merci de votre patience !
    
 2. **Accéder à l'interface streamlit :**  
    Rendez-vous sur [http://localhost:8000](http://localhost:8000) 
+
+### Qualité de code (développeurs)
+
+```bash
+uv run pre-commit install
+uv run pre-commit run --all-files
+```
+
+## Licence
+
+Voir le fichier [LICENSE](LICENSE).
