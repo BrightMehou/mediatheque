@@ -4,7 +4,7 @@ from typing import Dict, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from pydantic_extra_types.isbn import ISBN
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 from sqlalchemy.engine import Connection
 
 from src.db.connection import get_db
@@ -41,16 +41,23 @@ def load_books(
     WHERE 1=1
     """
 
+    bind_params = {}
+
     if types:
-        type_list = ", ".join(f"'{t}'" for t in types)
-        query += f" AND lt.type IN ({type_list})"
+        query += " AND lt.type IN :types"
+        bind_params["types"] = tuple(types)
 
     if author:
-        query += f" AND a.pseudonym ILIKE '%{author}%'"
+        query += " AND a.pseudonym ILIKE :author"
+        bind_params["author"] = f"%{author}%"
 
     query += " LIMIT 100;"
 
-    result = connection.execute(text(query))
+    query_text = text(query)
+    if "types" in bind_params:
+        query_text = query_text.bindparams(bindparam("types", expanding=True))
+
+    result = connection.execute(query_text, bind_params)
     return [dict(row._mapping) for row in result]
 
 
