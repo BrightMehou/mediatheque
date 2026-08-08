@@ -1,8 +1,8 @@
 from datetime import date
-from typing import Dict, List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 from pydantic_extra_types.isbn import ISBN
 from sqlalchemy import bindparam, text
 from sqlalchemy.engine import Connection
@@ -12,27 +12,38 @@ from src.db.connection import get_db
 
 class BookBase(BaseModel):
     title: str
-    author: int
+    author_id: int = Field(..., description="ID de l'auteur dans la base")
     isbn: ISBN
     publication_date: date
     type: str
     page_count: int
 
 
-class Book(BookBase):
+class BookCreate(BookBase):
+    pass
+
+
+class BookUpdate(BookBase):
+    pass
+
+
+class BookOut(BaseModel):
     id: int
+    title: str
+    author: str
+    publication_date: date
+    type: str
 
 
 book_router = APIRouter(prefix="/book", tags=["book"])
 
 
-@book_router.get("/")
+@book_router.get("/", response_model=List[BookOut])
 def load_books(
     types: List[str] = Query(default=None),
-    author: str = None,
+    author: Optional[str] = None,
     connection: Connection = Depends(get_db),
-) -> List[Dict]:
-
+):
     query = """
     SELECT l.id, l.title, a.pseudonym AS author, l.publication_date, lt.type
     FROM book l
@@ -40,7 +51,6 @@ def load_books(
     JOIN book_type lt ON l.type_id = lt.id
     WHERE 1=1
     """
-
     bind_params = {}
 
     if types:
@@ -51,46 +61,30 @@ def load_books(
         query += " AND a.pseudonym ILIKE :author"
         bind_params["author"] = f"%{author}%"
 
-    query += " LIMIT 100;"
+    query += " LIMIT 1000;"
 
     query_text = text(query)
     if "types" in bind_params:
         query_text = query_text.bindparams(bindparam("types", expanding=True))
 
     result = connection.execute(query_text, bind_params)
-    return [dict(row._mapping) for row in result]
+    return result.mappings().all()
 
 
-@book_router.post("/")
-def create_book(
-    book: BookBase, connection: Connection = Depends(get_db)
-) -> Dict[str, str]:
+@book_router.post("/", status_code=status.HTTP_201_CREATED)
+def create_book(book: BookCreate, connection: Connection = Depends(get_db)):
     type_query = "SELECT id FROM book_type WHERE type = :type;"
 
     insert_query = """
     INSERT INTO book (
-        author_id,
-        title,
-        isbn,
-        publication_date,
-        type_id,
-        page_count
+        author_id, title, isbn, publication_date, type_id, page_count
     )
     VALUES (
-        :author_id,
-        :title,
-        :isbn,
-        :publication_date,
-        :type_id,
-        :page_count
-    );
+        :author_id, :title, :isbn, :publication_date, :type_id, :page_count
+    ) RETURNING id;
     """
 
-    type_result = connection.execute(
-        text(type_query),
-        {"type": book.type},
-    )
-
+    type_result = connection.execute(text(type_query), {"type": book.type})
     type_row = type_result.fetchone()
 
     if type_row is None:
@@ -99,10 +93,10 @@ def create_book(
             detail=f"Type de livre '{book.type}' introuvable.",
         )
 
-    connection.execute(
+    result = connection.execute(
         text(insert_query),
         {
-            "author_id": book.author,
+            "author_id": book.author_id,
             "title": book.title,
             "isbn": str(book.isbn),
             "publication_date": book.publication_date,
@@ -110,16 +104,17 @@ def create_book(
             "page_count": book.page_count,
         },
     )
-
     connection.commit()
 
-    return {"message": f"Livre '{book.title}' créé avec succès."}
+    new_id = result.scalar()
+
+    return {"id": new_id}
 
 
-@book_router.put("/{book_id}")
+@book_router.put("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 def update_book(
-    book_id: int, book: BookBase, connection: Connection = Depends(get_db)
-) -> Dict[str, str]:
+    book_id: int, book: BookUpdate, connection: Connection = Depends(get_db)
+):
     type_query = "SELECT id FROM book_type WHERE type = :type;"
 
     update_query = """
@@ -133,11 +128,7 @@ def update_book(
     WHERE id = :book_id;
     """
 
-    type_result = connection.execute(
-        text(type_query),
-        {"type": book.type},
-    )
-
+    type_result = connection.execute(text(type_query), {"type": book.type})
     type_row = type_result.fetchone()
 
     if type_row is None:
@@ -149,7 +140,7 @@ def update_book(
     result = connection.execute(
         text(update_query),
         {
-            "author_id": book.author,
+            "author_id": book.author_id,
             "title": book.title,
             "isbn": str(book.isbn),
             "publication_date": book.publication_date,
@@ -158,7 +149,6 @@ def update_book(
             "book_id": book_id,
         },
     )
-
     connection.commit()
 
     if result.rowcount == 0:
@@ -166,5 +156,3 @@ def update_book(
             status_code=404,
             detail=f"Aucun livre trouvé avec l'ID {book_id}.",
         )
-
-    return {"message": f"Livre avec l'ID {book_id} mis à jour avec succès."}
