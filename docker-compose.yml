@@ -29,7 +29,7 @@ services:
       postgres:
         condition: service_healthy
     command: >
-      bash -c "python src/db/init_db.py && \
+      bash -c "python src/init_db.py && \
                uvicorn 'src.api.app:app' --host=0.0.0.0 --port=8000"
   ui:
     build:

@@ -1,6 +1,10 @@
+import logging
 import os
 
 from sqlalchemy import URL, create_engine
+from sqlalchemy.exc import SQLAlchemyError
+
+logger = logging.getLogger(__name__)
 
 DB_URL = URL.create(
     drivername="postgresql+psycopg",
@@ -15,5 +19,11 @@ engine = create_engine(DB_URL, future=True)
 
 
 def get_db():
-    with engine.connect() as connection:
+    connection = engine.connect()
+    try:
         yield connection
+    except SQLAlchemyError as e:
+        logger.error(f"Erreur de base de données : {e}")
+        raise
+    finally:
+        connection.close()

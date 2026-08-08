@@ -1,11 +1,11 @@
 CREATE
-OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $ $ BEGIN NEW.updated_at = NOW();
+OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $$ BEGIN NEW.updated_at = NOW();
 
 RETURN NEW;
 
 END;
 
-$ $ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE TABLE IF NOT EXISTS author (
     id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS book_type (
     created_at timestamptz NOT NULL DEFAULT NOW(),
     updated_at timestamptz NOT NULL DEFAULT NOW(),
     deleted_at timestamptz,
-    TYPE text NOT NULL UNIQUE
+    type text NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS book (
