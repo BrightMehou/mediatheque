@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Médiathèque API",
     description="API pour la gestion de la médiathèque",
-    version="0.2.0",
+    version="0.3.0",
 )
 
 app.include_router(author_router)

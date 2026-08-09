@@ -3,7 +3,6 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from pydantic_extra_types.isbn import ISBN
 from sqlalchemy import bindparam, text
 from sqlalchemy.engine import Connection
 
@@ -13,7 +12,7 @@ from src.db.connection import get_db
 class BookBase(BaseModel):
     title: str
     author_id: int = Field(..., description="ID de l'auteur dans la base")
-    isbn: ISBN
+    isbn: str = Field(..., description="Numéro ISBN du livre")
     publication_date: date
     type: str
     page_count: int
