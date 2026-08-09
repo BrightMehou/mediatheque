@@ -6,6 +6,19 @@ Ce projet est actuellement en cours de développement.
 De nouvelles fonctionnalités, améliorations et mises à jour arriveront prochainement.
 
 Merci de votre patience !
+## Structure du projet
+
+```
+├── .github/workflows/     # CI : tests Python et build Docker
+├── src/
+│   ├── api/               # FastAPI, persistance SQLite
+│   ├── db/                # Utilitaire db
+│   └── ui/                # Streamlit (accueil + pages)
+├── tests/                 # Tests API, base de données et UI
+├── docker-compose.yaml
+├── Dockerfile
+└── pyproject.toml         # Dépendances (uv) et configuration Ruff
+```
 
 ## 🚀 **Installation et Exécution**
 
@@ -15,8 +28,10 @@ Merci de votre patience !
    docker-compose up -d
    ```
    
-2. **Accéder à l'interface streamlit :**  
-   Rendez-vous sur [http://localhost:8000](http://localhost:8000) 
+| Service | URL |
+|---------|-----|
+| API (Swagger) | http://localhost:8000/docs |
+| Interface Streamlit | http://localhost:8501 |
 
 ### Qualité de code (développeurs)
 

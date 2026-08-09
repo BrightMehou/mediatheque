@@ -24,6 +24,7 @@ LIVRE_TYPES = [
     "Bande dessinée",
     "Biographie",
     "Comics",
+    "Essai",
     "Manga",
     "Manhwa",
     "Manhua",
@@ -63,7 +64,7 @@ if __name__ == "__main__":
                     "last_name": fake.last_name(),
                     "pseudonym": fake.user_name(),
                 }
-                for _ in range(20)
+                for _ in range(100)
             ],
         )
 
