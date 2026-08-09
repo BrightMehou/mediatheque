@@ -1,4 +1,12 @@
-def test_load_books_no_filters(client, mock_db_conn, mocker):
+from unittest.mock import MagicMock
+
+from fastapi.testclient import TestClient
+from pytest_mock import MockerFixture
+
+
+def test_load_books_no_filters(
+    client: TestClient, mock_db_conn: MagicMock, mocker: MockerFixture
+) -> None:
     mock_result = mocker.MagicMock()
     mock_result.mappings().all.return_value = [
         {
@@ -7,7 +15,7 @@ def test_load_books_no_filters(client, mock_db_conn, mocker):
             "author": "Frank Herbert",
             "publication_date": "1965-08-01",
             "type": "Science-Fiction",
-        }
+        },
     ]
     mock_db_conn.execute.return_value = mock_result
 
@@ -21,12 +29,14 @@ def test_load_books_no_filters(client, mock_db_conn, mocker):
             "author": "Frank Herbert",
             "publication_date": "1965-08-01",
             "type": "Science-Fiction",
-        }
+        },
     ]
     mock_db_conn.execute.assert_called_once()
 
 
-def test_load_books_with_filters(client, mock_db_conn, mocker):
+def test_load_books_with_filters(
+    client: TestClient, mock_db_conn: MagicMock, mocker: MockerFixture
+) -> None:
     mock_result = mocker.MagicMock()
     mock_result.mappings().all.return_value = []
     mock_db_conn.execute.return_value = mock_result
@@ -39,7 +49,9 @@ def test_load_books_with_filters(client, mock_db_conn, mocker):
     mock_db_conn.execute.assert_called_once()
 
 
-def test_create_book_success(client, mock_db_conn, mocker):
+def test_create_book_success(
+    client: TestClient, mock_db_conn: MagicMock, mocker: MockerFixture
+) -> None:
     mock_type_result = mocker.MagicMock()
     type_row = mocker.MagicMock()
     type_row._mapping = {"id": 2}
@@ -67,7 +79,9 @@ def test_create_book_success(client, mock_db_conn, mocker):
     mock_db_conn.commit.assert_called_once()
 
 
-def test_create_book_type_not_found(client, mock_db_conn, mocker):
+def test_create_book_type_not_found(
+    client: TestClient, mock_db_conn: MagicMock, mocker: MockerFixture
+) -> None:
     mock_type_result = mocker.MagicMock()
     mock_type_result.fetchone.return_value = None
     mock_db_conn.execute.return_value = mock_type_result
@@ -85,13 +99,15 @@ def test_create_book_type_not_found(client, mock_db_conn, mocker):
 
     assert response.status_code == 422
     assert response.json() == {
-        "detail": "Invalid book type: 'TypeInconnu' does not exist."
+        "detail": "Invalid book type: 'TypeInconnu' does not exist.",
     }
     mock_db_conn.execute.assert_called_once()  # On s'arrête au SELECT
     mock_db_conn.commit.assert_not_called()
 
 
-def test_update_book_success(client, mock_db_conn, mocker):
+def test_update_book_success(
+    client: TestClient, mock_db_conn: MagicMock, mocker: MockerFixture
+) -> None:
     mock_type_result = mocker.MagicMock()
     type_row = mocker.MagicMock()
     type_row._mapping = {"id": 2}
@@ -118,7 +134,9 @@ def test_update_book_success(client, mock_db_conn, mocker):
     mock_db_conn.commit.assert_called_once()
 
 
-def test_update_book_not_found(client, mock_db_conn, mocker):
+def test_update_book_not_found(
+    client: TestClient, mock_db_conn: MagicMock, mocker: MockerFixture
+) -> None:
     mock_type_result = mocker.MagicMock()
     type_row = mocker.MagicMock()
     type_row._mapping = {"id": 2}
@@ -145,7 +163,9 @@ def test_update_book_not_found(client, mock_db_conn, mocker):
     assert mock_db_conn.execute.call_count == 2
 
 
-def test_update_book_type_not_found(client, mock_db_conn, mocker):
+def test_update_book_type_not_found(
+    client: TestClient, mock_db_conn: MagicMock, mocker: MockerFixture
+) -> None:
     mock_type_result = mocker.MagicMock()
     mock_type_result.fetchone.return_value = None
     mock_db_conn.execute.return_value = mock_type_result

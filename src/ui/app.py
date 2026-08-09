@@ -32,7 +32,8 @@ try:
     types = load_types()
 
     type_selectionnes = st.multiselect(
-        "Choisissez un type de livre :", options=[t["type"] for t in types]
+        "Choisissez un type de livre :",
+        options=[t["type"] for t in types],
     )
 
     author = st.text_input("Auteur (pseudonyme)")

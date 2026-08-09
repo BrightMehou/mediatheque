@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import text
@@ -24,11 +25,11 @@ app.include_router(book_router)
 
 @app.get("/")
 async def root() -> dict[str, str]:
-    return {"msg": "API de la médiathèque opérationnelle ✅"}
+    return {"msg": "API de la médiathèque opérationnelle."}
 
 
 @app.get("/health")
-def health_check(connection: Connection = Depends(get_db)) -> dict[str, str]:
+def health_check(connection: Annotated[Connection, Depends(get_db)]) -> dict[str, str]:
     try:
         connection.execute(text("SELECT 1"))
     except Exception as exc:

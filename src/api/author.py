@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -28,7 +30,7 @@ author_router = APIRouter(prefix="/author", tags=["author"])
 
 
 @author_router.get("/", response_model=list[AuthorOut])
-def get_authors(connection: Connection = Depends(get_db)):
+def get_authors(connection: Annotated[Connection, Depends(get_db)]):
     query = (
         "SELECT id, first_name, last_name, pseudonym FROM author ORDER BY last_name;"
     )
@@ -37,7 +39,7 @@ def get_authors(connection: Connection = Depends(get_db)):
 
 
 @author_router.get("/{author_id}", response_model=AuthorOut)
-def get_author(author_id: int, connection: Connection = Depends(get_db)):
+def get_author(author_id: int, connection: Annotated[Connection, Depends(get_db)]):
     query = (
         "SELECT id, first_name, last_name, pseudonym FROM author WHERE id = :author_id;"
     )
@@ -53,9 +55,11 @@ def get_author(author_id: int, connection: Connection = Depends(get_db)):
 
 
 @author_router.post("/", status_code=status.HTTP_201_CREATED)
-def create_author(author: AuthorCreate, connection: Connection = Depends(get_db)):
+def create_author(
+    author: AuthorCreate, connection: Annotated[Connection, Depends(get_db)]
+):
     query = """
-    INSERT INTO author (first_name, last_name, pseudonym) 
+    INSERT INTO author (first_name, last_name, pseudonym)
     VALUES (:first_name, :last_name, :pseudonym) RETURNING id;
     """
     result = connection.execute(text(query), author.model_dump())
@@ -68,15 +72,18 @@ def create_author(author: AuthorCreate, connection: Connection = Depends(get_db)
 
 @author_router.put("/{author_id}", status_code=status.HTTP_204_NO_CONTENT)
 def update_author(
-    author_id: int, author: AuthorUpdate, connection: Connection = Depends(get_db)
+    author_id: int,
+    author: AuthorUpdate,
+    connection: Annotated[Connection, Depends(get_db)],
 ):
     query = """
-    UPDATE author 
-    SET first_name = :first_name, last_name = :last_name, pseudonym = :pseudonym 
+    UPDATE author
+    SET first_name = :first_name, last_name = :last_name, pseudonym = :pseudonym
     WHERE id = :author_id;
     """
     result = connection.execute(
-        text(query), {**author.model_dump(), "author_id": author_id}
+        text(query),
+        {**author.model_dump(), "author_id": author_id},
     )
     connection.commit()
 

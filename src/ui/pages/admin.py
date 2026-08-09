@@ -18,11 +18,13 @@ def load_types() -> list[dict]:
 
 
 @st.dialog("Ajouter un type de livre")
-def create_type():
+def create_type() -> None:
     new_type = st.text_input("Type de livre")
     if st.button("Ajouter"):
         response = requests.post(
-            f"{API_BASE_URL}/book_type/", json={"type": new_type}, timeout=30
+            f"{API_BASE_URL}/book_type/",
+            json={"type": new_type},
+            timeout=30,
         )
         response.raise_for_status()
         logger.info("Création OK: %s", response.json())

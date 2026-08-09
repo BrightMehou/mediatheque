@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -38,9 +39,9 @@ book_router = APIRouter(prefix="/book", tags=["book"])
 
 @book_router.get("/", response_model=list[BookOut])
 def load_books(
-    types: list[str] = Query(default=None),
+    connection: Annotated[Connection, Depends(get_db)],
+    types: Annotated[list[str] | None, Query()] = None,
     author: str | None = None,
-    connection: Connection = Depends(get_db),
 ):
     query = """
     SELECT l.id, l.title, a.pseudonym AS author, l.publication_date, lt.type
@@ -70,7 +71,7 @@ def load_books(
 
 
 @book_router.post("/", status_code=status.HTTP_201_CREATED)
-def create_book(book: BookCreate, connection: Connection = Depends(get_db)):
+def create_book(book: BookCreate, connection: Annotated[Connection, Depends(get_db)]):
     type_query = "SELECT id FROM book_type WHERE type = :type;"
 
     insert_query = """
@@ -111,7 +112,9 @@ def create_book(book: BookCreate, connection: Connection = Depends(get_db)):
 
 @book_router.put("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 def update_book(
-    book_id: int, book: BookUpdate, connection: Connection = Depends(get_db)
+    book_id: int,
+    book: BookUpdate,
+    connection: Annotated[Connection, Depends(get_db)],
 ):
     type_query = "SELECT id FROM book_type WHERE type = :type;"
 

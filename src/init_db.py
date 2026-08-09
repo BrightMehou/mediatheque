@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
         logger.info("Truncating tables...")
         connection.execute(
-            text("TRUNCATE TABLE book, author, book_type RESTART IDENTITY CASCADE")
+            text("TRUNCATE TABLE book, author, book_type RESTART IDENTITY CASCADE"),
         )
 
         logger.info("Insertion des types de livres")
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         logger.info("Insertion des auteurs")
         connection.execute(
             text(
-                "INSERT INTO author (first_name, last_name, pseudonym) VALUES (:first_name, :last_name, :pseudonym)"
+                "INSERT INTO author (first_name, last_name, pseudonym) VALUES (:first_name, :last_name, :pseudonym)",
             ),
             [
                 {
@@ -71,14 +71,14 @@ if __name__ == "__main__":
         author_ids = [
             row._mapping["id"]
             for row in connection.execute(
-                text("SELECT id FROM author ORDER BY id")
+                text("SELECT id FROM author ORDER BY id"),
             ).fetchall()
         ]
 
         book_type_ids = [
             row._mapping["id"]
             for row in connection.execute(
-                text("SELECT id FROM book_type ORDER BY id")
+                text("SELECT id FROM book_type ORDER BY id"),
             ).fetchall()
         ]
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         connection.execute(
             text(
                 "INSERT INTO book (author_id, title, isbn, publication_date, type_id, page_count) "
-                "VALUES (:author_id, :title, :isbn, :publication_date, :type_id, :page_count)"
+                "VALUES (:author_id, :title, :isbn, :publication_date, :type_id, :page_count)",
             ),
             [
                 {
@@ -94,7 +94,8 @@ if __name__ == "__main__":
                     "title": fake.sentence(),
                     "isbn": fake.isbn13(separator=""),
                     "publication_date": fake.date_between(
-                        start_date="-10y", end_date="today"
+                        start_date="-10y",
+                        end_date="today",
                     ),
                     "type_id": random.choice(book_type_ids),
                     "page_count": fake.random_int(min=50, max=500),
