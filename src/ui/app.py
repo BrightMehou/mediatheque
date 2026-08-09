@@ -8,19 +8,19 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 @st.cache_data
 def load_types() -> list[dict]:
-    response = requests.get(f"{API_BASE_URL}/book_type")
+    response = requests.get(f"{API_BASE_URL}/book_type", timeout=30)
     response.raise_for_status()
     return response.json()
 
 
-def load_books(types: list[str] = None, author: str = None) -> list[dict]:
+def load_books(types: list[str] | None = None, author: str | None = None) -> list[dict]:
     params = {}
     if types:
         params["types"] = types
     if author:
         params["author"] = author
 
-    response = requests.get(f"{API_BASE_URL}/book", params=params)
+    response = requests.get(f"{API_BASE_URL}/book", params=params, timeout=30)
     response.raise_for_status()
     return response.json()
 

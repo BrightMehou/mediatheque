@@ -83,8 +83,10 @@ def test_create_book_type_not_found(client, mock_db_conn, mocker):
 
     response = client.post("/book/", json=payload)
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Type de livre 'TypeInconnu' introuvable."}
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "Invalid book type: 'TypeInconnu' does not exist."
+    }
     mock_db_conn.execute.assert_called_once()  # On s'arrête au SELECT
     mock_db_conn.commit.assert_not_called()
 
@@ -139,7 +141,7 @@ def test_update_book_not_found(client, mock_db_conn, mocker):
     response = client.put("/book/999", json=payload)
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Aucun livre trouvé avec l'ID 999."}
+    assert response.json() == {"detail": "No book found with ID 999."}
     assert mock_db_conn.execute.call_count == 2
 
 
@@ -159,7 +161,7 @@ def test_update_book_type_not_found(client, mock_db_conn, mocker):
 
     response = client.put("/book/1", json=payload)
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Type de livre 'Bizarre' introuvable."}
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid book type: 'Bizarre' does not exist."}
     mock_db_conn.execute.assert_called_once()
     mock_db_conn.commit.assert_not_called()

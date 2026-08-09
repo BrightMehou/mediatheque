@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -29,7 +27,7 @@ class AuthorOut(AuthorBase):
 author_router = APIRouter(prefix="/author", tags=["author"])
 
 
-@author_router.get("/", response_model=List[AuthorOut])
+@author_router.get("/", response_model=list[AuthorOut])
 def get_authors(connection: Connection = Depends(get_db)):
     query = (
         "SELECT id, first_name, last_name, pseudonym FROM author ORDER BY last_name;"
@@ -48,7 +46,8 @@ def get_author(author_id: int, connection: Connection = Depends(get_db)):
 
     if row is None:
         raise HTTPException(
-            status_code=404, detail=f"Aucun auteur trouvé avec l'ID {author_id}."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No author found with ID {author_id}.",
         )
     return row
 
@@ -83,5 +82,6 @@ def update_author(
 
     if result.rowcount == 0:
         raise HTTPException(
-            status_code=404, detail=f"Aucun auteur trouvé avec l'ID {author_id}."
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No author found with ID {author_id}.",
         )

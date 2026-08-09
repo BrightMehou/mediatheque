@@ -1,5 +1,4 @@
 from datetime import date
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -37,10 +36,10 @@ class BookOut(BaseModel):
 book_router = APIRouter(prefix="/book", tags=["book"])
 
 
-@book_router.get("/", response_model=List[BookOut])
+@book_router.get("/", response_model=list[BookOut])
 def load_books(
-    types: List[str] = Query(default=None),
-    author: Optional[str] = None,
+    types: list[str] = Query(default=None),
+    author: str | None = None,
     connection: Connection = Depends(get_db),
 ):
     query = """
@@ -88,8 +87,8 @@ def create_book(book: BookCreate, connection: Connection = Depends(get_db)):
 
     if type_row is None:
         raise HTTPException(
-            status_code=404,
-            detail=f"Type de livre '{book.type}' introuvable.",
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Invalid book type: '{book.type}' does not exist.",
         )
 
     result = connection.execute(
@@ -132,8 +131,8 @@ def update_book(
 
     if type_row is None:
         raise HTTPException(
-            status_code=404,
-            detail=f"Type de livre '{book.type}' introuvable.",
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Invalid book type: '{book.type}' does not exist.",
         )
 
     result = connection.execute(
@@ -152,6 +151,6 @@ def update_book(
 
     if result.rowcount == 0:
         raise HTTPException(
-            status_code=404,
-            detail=f"Aucun livre trouvé avec l'ID {book_id}.",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No book found with ID {book_id}.",
         )

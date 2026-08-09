@@ -22,8 +22,8 @@ def get_db():
     connection = engine.connect()
     try:
         yield connection
-    except SQLAlchemyError as e:
-        logger.error(f"Erreur de base de données : {e}")
+    except SQLAlchemyError:
+        logger.exception("Erreur de base de données : %s")
         raise
     finally:
         connection.close()

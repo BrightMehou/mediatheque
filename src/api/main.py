@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import text
@@ -24,20 +23,20 @@ app.include_router(book_router)
 
 
 @app.get("/")
-async def root() -> Dict[str, str]:
+async def root() -> dict[str, str]:
     return {"msg": "API de la médiathèque opérationnelle ✅"}
 
 
 @app.get("/health")
-def health_check(connection: Connection = Depends(get_db)) -> Dict[str, str]:
+def health_check(connection: Connection = Depends(get_db)) -> dict[str, str]:
     try:
         connection.execute(text("SELECT 1"))
     except Exception as exc:
-        logger.error(f"Erreur de connexion à la base de données : {exc}")
+        logger.exception("Erreur de connexion à la base de données : %s")
 
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Service indisponible (Erreur de base de données).",
-        )
+        ) from exc
 
     return {"status": "ok", "db": "ok"}

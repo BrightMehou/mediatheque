@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -27,7 +25,7 @@ class BookTypeOut(BookTypeBase):
 book_type_router = APIRouter(prefix="/book_type", tags=["book_type"])
 
 
-@book_type_router.get("/", response_model=List[BookTypeOut])
+@book_type_router.get("/", response_model=list[BookTypeOut])
 def get_book_types(connection: Connection = Depends(get_db)):
     query = "SELECT id, type FROM book_type ORDER BY type;"
     result = connection.execute(text(query))
@@ -61,8 +59,8 @@ def update_book_type(
 
     if result.rowcount == 0:
         raise HTTPException(
-            status_code=404,
-            detail=f"Aucun type de livre trouvé avec l'ID {book_type_id}.",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No book type found with ID {book_type_id}.",
         )
 
 
@@ -74,6 +72,6 @@ def delete_book_type(book_type_id: int, connection: Connection = Depends(get_db)
 
     if result.rowcount == 0:
         raise HTTPException(
-            status_code=404,
-            detail=f"Aucun type de livre trouvé avec l'ID {book_type_id}.",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No book type found with ID {book_type_id}.",
         )

@@ -46,7 +46,7 @@ def test_get_author_not_found(client, mock_db_conn, mocker):
     response = client.get("/author/999")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Aucun auteur trouvé avec l'ID 999."}
+    assert response.json() == {"detail": "No author found with ID 999."}
     mock_db_conn.execute.assert_called_once()
 
 
@@ -86,5 +86,5 @@ def test_update_author_not_found(client, mock_db_conn, mocker):
     response = client.put("/author/999", json=payload)
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Aucun auteur trouvé avec l'ID 999."}
+    assert response.json() == {"detail": "No author found with ID 999."}
     mock_db_conn.execute.assert_called_once()

@@ -48,7 +48,7 @@ def test_update_book_type_not_found(client, mock_db_conn, mocker):
     response = client.put("/book_type/999", json={"type": "Inexistant"})
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Aucun type de livre trouvé avec l'ID 999."}
+    assert response.json() == {"detail": "No book type found with ID 999."}
 
 
 def test_delete_book_type_success(client, mock_db_conn, mocker):
@@ -70,4 +70,4 @@ def test_delete_book_type_not_found(client, mock_db_conn, mocker):
     response = client.delete("/book_type/999")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Aucun type de livre trouvé avec l'ID 999."}
+    assert response.json() == {"detail": "No book type found with ID 999."}

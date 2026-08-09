@@ -12,7 +12,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 @st.cache_data
 def load_types() -> list[dict]:
-    response = requests.get(f"{API_BASE_URL}/book_type")
+    response = requests.get(f"{API_BASE_URL}/book_type", timeout=30)
     response.raise_for_status()
     return response.json()
 
@@ -21,9 +21,11 @@ def load_types() -> list[dict]:
 def create_type():
     new_type = st.text_input("Type de livre")
     if st.button("Ajouter"):
-        response = requests.post(f"{API_BASE_URL}/book_type/", json={"type": new_type})
+        response = requests.post(
+            f"{API_BASE_URL}/book_type/", json={"type": new_type}, timeout=30
+        )
         response.raise_for_status()
-        logging.info(f"Création OK: {response.json()}")
+        logger.info("Création OK: %s", response.json())
         load_types.clear()
         st.rerun()
 
@@ -57,11 +59,13 @@ try:
                     response = requests.put(
                         f"{API_BASE_URL}/book_type/{record['id']}",
                         json={"type": new_type},
+                        timeout=30,
                     )
                     response.raise_for_status()
-                    logging.info(f"Modification du type {record['id']} réussie")
+                    logger.info("Modification du type %s réussie", record["id"])
                     load_types.clear()
                     st.rerun()
 
 except Exception as e:
+    logger.exception("Erreur: %s")
     st.error(f"Erreur: {e}")
