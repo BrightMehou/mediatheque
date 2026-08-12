@@ -11,7 +11,7 @@ from src.db.connection import get_db
 class UserBase(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
-    pseudonym: str
+    pseudo: str
     email: str
 
 
@@ -32,14 +32,16 @@ user_router = APIRouter(prefix="/user", tags=["user"])
 
 @user_router.get("/", response_model=list[UserOut])
 def get_users(connection: Annotated[Connection, Depends(get_db)]):
-    query = "SELECT id, first_name, last_name, pseudonym, email FROM users ORDER BY last_name;"
+    query = (
+        "SELECT id, first_name, last_name, pseudo, email FROM users ORDER BY last_name;"
+    )
     result = connection.execute(text(query))
     return result.mappings().all()
 
 
 @user_router.get("/{user_id}", response_model=UserOut)
 def get_user(user_id: int, connection: Annotated[Connection, Depends(get_db)]):
-    query = "SELECT id, first_name, last_name, pseudonym, email FROM users WHERE id = :user_id;"
+    query = "SELECT id, first_name, last_name, pseudo, email FROM users WHERE id = :user_id;"
     result = connection.execute(text(query), {"user_id": user_id})
     row = result.mappings().first()
 
@@ -58,8 +60,8 @@ def get_user(user_id: int, connection: Annotated[Connection, Depends(get_db)]):
 )
 def create_user(user: UserCreate, connection: Annotated[Connection, Depends(get_db)]):
     query = """
-    INSERT INTO users (first_name, last_name, pseudonym, email, password)
-    VALUES (:first_name, :last_name, :pseudonym, :email, :password) RETURNING id;
+    INSERT INTO users (first_name, last_name, pseudo, email, password)
+    VALUES (:first_name, :last_name, :pseudo, :email, :password) RETURNING id;
     """
     result = connection.execute(text(query), user.model_dump())
     connection.commit()
@@ -77,7 +79,7 @@ def update_user(
 ):
     query = """
     UPDATE users
-    SET first_name = :first_name, last_name = :last_name, pseudonym = :pseudonym, email = :email
+    SET first_name = :first_name, last_name = :last_name, pseudo = :pseudo, email = :email
     WHERE id = :user_id;
     """
     result = connection.execute(

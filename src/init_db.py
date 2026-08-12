@@ -17,7 +17,7 @@ fake = Faker("fr_FR")
 Faker.seed(42)
 
 BASE_DIR = Path(__file__).resolve().parent
-SQL_FILE = BASE_DIR.parent / "database" / "create_table.sql"
+SQL_FILE = BASE_DIR.parent / "src" / "db" / "create_table.sql"
 
 TOPICS = [
     "Art",
@@ -64,13 +64,13 @@ if __name__ == "__main__":
         logger.info("Users insertion")
         connection.execute(
             text(
-                "INSERT INTO users (first_name, last_name, pseudonym, email, password) VALUES (:first_name, :last_name, :pseudonym, :email, :password)",
+                "INSERT INTO users (first_name, last_name, pseudo, email, password) VALUES (:first_name, :last_name, :pseudo, :email, :password)",
             ),
             [
                 {
                     "first_name": fake.first_name(),
                     "last_name": fake.last_name(),
-                    "pseudonym": fake.user_name(),
+                    "pseudo": fake.user_name(),
                     "email": fake.unique.email(),
                     "password": fake.password(),
                 }

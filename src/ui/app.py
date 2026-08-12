@@ -36,7 +36,7 @@ try:
         options=[t["topic"] for t in topics],
     )
 
-    user = st.text_input("Auteur (pseudonyme)")
+    user = st.text_input("Auteur (pseudoe)")
 
     pages = load_pages(topics=topic_selectionnes, user=user)
     st.dataframe(pages)

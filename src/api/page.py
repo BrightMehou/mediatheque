@@ -27,9 +27,21 @@ class pageUpdate(pageBase):
 class pageOut(BaseModel):
     id: int
     title: str
-    pseudonym: str
+    pseudo: str
     publication_date: date
     topic: str
+
+
+def check_topic_exists(connection: Connection, topic_name: str) -> bool:
+    query = "SELECT id FROM topic WHERE topic = :topic;"
+    result = connection.execute(text(query), {"topic": topic_name})
+    return result.fetchone()
+
+
+def check_author_exists(connection: Connection, user_id: int) -> bool:
+    query = "SELECT id FROM users WHERE id = :user_id;"
+    result = connection.execute(text(query), {"user_id": user_id})
+    return result.fetchone()
 
 
 page_router = APIRouter(prefix="/page", tags=["page"])
@@ -42,7 +54,7 @@ def load_pages(
     user: str | None = None,
 ):
     query = """
-    SELECT p.id, p.title, u.pseudonym AS pseudonym, p.publication_date, lt.topic
+    SELECT p.id, p.title, u.pseudo AS pseudo, p.publication_date, lt.topic
     FROM page p
     JOIN users u ON p.user_id = u.id
     JOIN topic lt ON p.topic_id = lt.id
@@ -55,7 +67,7 @@ def load_pages(
         bind_params["topics"] = tuple(topics)
 
     if user:
-        query += " AND u.pseudonym ILIKE :user"
+        query += " AND u.pseudo ILIKE :user"
         bind_params["user"] = f"%{user}%"
 
     query += " LIMIT 1000;"
@@ -74,7 +86,6 @@ def load_pages(
     response_model=dict[str, int],
 )
 def create_page(page: pageCreate, connection: Annotated[Connection, Depends(get_db)]):
-    type_query = "SELECT id FROM topic WHERE topic = :topic;"
 
     insert_query = """
     INSERT INTO page (
@@ -85,13 +96,19 @@ def create_page(page: pageCreate, connection: Annotated[Connection, Depends(get_
     ) RETURNING id;
     """
 
-    type_result = connection.execute(text(type_query), {"topic": page.topic})
-    type_row = type_result.fetchone()
+    topic_row = check_topic_exists(connection, page.topic)
 
-    if type_row is None:
+    if topic_row is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Invalid page topic: '{page.topic}' does not exist.",
+            detail=f"Invalid topic: '{page.topic}' does not exist.",
+        )
+
+    author_row = check_author_exists(connection, page.user_id)
+    if author_row is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Invalid author: '{page.user_id}' does not exist.",
         )
 
     result = connection.execute(
@@ -99,10 +116,8 @@ def create_page(page: pageCreate, connection: Annotated[Connection, Depends(get_
         {
             "user_id": page.user_id,
             "title": page.title,
-            "isbn": str(page.isbn),
             "publication_date": page.publication_date,
-            "topic_id": type_row._mapping["id"],
-            "page_count": page.page_count,
+            "topic_id": topic_row._mapping["id"],
         },
     )
     connection.commit()
@@ -118,24 +133,30 @@ def update_page(
     page: pageUpdate,
     connection: Annotated[Connection, Depends(get_db)],
 ):
-    type_query = "SELECT id FROM topic WHERE topic = :topic;"
 
     update_query = """
     UPDATE page
     SET user_id = :user_id,
         title = :title,
         publication_date = :publication_date,
-        topic_id = :topic_id,
+        topic_id = :topic_id
     WHERE id = :page_id;
     """
 
-    type_result = connection.execute(text(type_query), {"topic": page.topic})
-    type_row = type_result.fetchone()
+    topic_row = check_topic_exists(connection, page.topic)
 
-    if type_row is None:
+    if topic_row is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Invalid page topic: '{page.topic}' does not exist.",
+            detail=f"Invalid topic: '{page.topic}' does not exist.",
+        )
+
+    author_row = check_author_exists(connection, page.user_id)
+
+    if author_row is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Invalid author: '{page.user_id}' does not exist.",
         )
 
     result = connection.execute(
@@ -143,10 +164,8 @@ def update_page(
         {
             "user_id": page.user_id,
             "title": page.title,
-            "isbn": str(page.isbn),
             "publication_date": page.publication_date,
-            "topic_id": type_row._mapping["id"],
-            "page_count": page.page_count,
+            "topic_id": topic_row._mapping["id"],
             "page_id": page_id,
         },
     )

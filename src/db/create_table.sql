@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     deleted_at timestamptz,
     first_name text,
     last_name text,
-    pseudonym text NOT NULL,
+    pseudo text NOT NULL,
     email text NOT NULL UNIQUE,
     password text NOT NULL
 );
