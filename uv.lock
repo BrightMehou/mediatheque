@@ -1921,7 +1921,6 @@ dependencies = [
     { name = "httpx2" },
     { name = "pandas" },
     { name = "psycopg", extra = ["binary"] },
-    { name = "pytest-mock" },
     { name = "sqlalchemy" },
     { name = "streamlit" },
 ]
@@ -1929,6 +1928,8 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-mock" },
     { name = "ruff" },
 ]
 
@@ -1939,7 +1940,6 @@ requires-dist = [
     { name = "httpx2", specifier = ">=2.10.0" },
     { name = "pandas", specifier = ">=3.0.1" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.3" },
-    { name = "pytest-mock", specifier = ">=3.15.1" },
     { name = "sqlalchemy", specifier = ">=2.0.46" },
     { name = "streamlit", specifier = ">=1.57.0" },
 ]
@@ -1947,5 +1947,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "pre-commit", specifier = ">=4.5.1" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "pytest-mock", specifier = ">=3.15.1" },
     { name = "ruff", specifier = ">=0.15.1" },
 ]

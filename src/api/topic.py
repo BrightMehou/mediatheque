@@ -80,6 +80,6 @@ def delete_topic(topic_id: int, connection: Annotated[Connection, Depends(get_db
     if result.rowcount == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No page type found with ID {topic_id}.",
+            detail=f"No topic found with ID {topic_id}.",
         )
     connection.commit()
