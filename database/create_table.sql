@@ -7,14 +7,16 @@ END;
 
 $$ LANGUAGE plpgsql;
 
-CREATE TABLE IF NOT EXISTS author (
+CREATE TABLE IF NOT EXISTS users (
     id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT NOW(),
     updated_at timestamptz NOT NULL DEFAULT NOW(),
     deleted_at timestamptz,
     first_name text,
     last_name text,
-    pseudonym text NOT NULL
+    pseudonym text NOT NULL,
+    email text NOT NULL UNIQUE,
+    password text NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS book_type (
@@ -30,19 +32,17 @@ CREATE TABLE IF NOT EXISTS book (
     created_at timestamptz NOT NULL DEFAULT NOW(),
     updated_at timestamptz NOT NULL DEFAULT NOW(),
     deleted_at timestamptz,
-    author_id integer REFERENCES author(id) NOT NULL,
+    user_id integer REFERENCES users(id) NOT NULL,
     title text NOT NULL,
-    isbn text NOT NULL,
     publication_date date,
-    type_id integer REFERENCES book_type(id),
-    page_count integer
+    type_id integer REFERENCES book_type(id)
 );
 
-DROP TRIGGER IF EXISTS set_updated_at_on_author ON author;
+DROP TRIGGER IF EXISTS set_updated_at_on_users ON users;
 
-CREATE TRIGGER set_updated_at_on_author BEFORE
+CREATE TRIGGER set_updated_at_on_users BEFORE
 UPDATE
-    ON author FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    ON users FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 DROP TRIGGER IF EXISTS set_updated_at_on_book_type ON book_type;
 

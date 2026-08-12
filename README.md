@@ -1,4 +1,4 @@
-# mediatheque
+# Wiki
 
 🚧 Projet en construction
 

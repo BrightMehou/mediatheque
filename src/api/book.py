@@ -11,11 +11,9 @@ from src.db.connection import get_db
 
 class BookBase(BaseModel):
     title: str
-    author_id: int = Field(..., description="ID de l'auteur dans la base")
-    isbn: str = Field(..., description="Numéro ISBN du livre")
+    user_id: int = Field(..., description="ID de l'utilisateur dans la base")
     publication_date: date
     type: str
-    page_count: int
 
 
 class BookCreate(BookBase):
@@ -29,7 +27,7 @@ class BookUpdate(BookBase):
 class BookOut(BaseModel):
     id: int
     title: str
-    author: str
+    pseudonym: str
     publication_date: date
     type: str
 
@@ -41,12 +39,12 @@ book_router = APIRouter(prefix="/book", tags=["book"])
 def load_books(
     connection: Annotated[Connection, Depends(get_db)],
     types: Annotated[list[str] | None, Query()] = None,
-    author: str | None = None,
+    user: str | None = None,
 ):
     query = """
-    SELECT l.id, l.title, a.pseudonym AS author, l.publication_date, lt.type
+    SELECT l.id, l.title, u.pseudonym AS pseudonym, l.publication_date, lt.type
     FROM book l
-    JOIN author a ON l.author_id = a.id
+    JOIN users u ON l.user_id = u.id
     JOIN book_type lt ON l.type_id = lt.id
     WHERE 1=1
     """
@@ -56,9 +54,9 @@ def load_books(
         query += " AND lt.type IN :types"
         bind_params["types"] = tuple(types)
 
-    if author:
-        query += " AND a.pseudonym ILIKE :author"
-        bind_params["author"] = f"%{author}%"
+    if user:
+        query += " AND a.pseudonym ILIKE :user"
+        bind_params["user"] = f"%{user}%"
 
     query += " LIMIT 1000;"
 
@@ -70,16 +68,20 @@ def load_books(
     return result.mappings().all()
 
 
-@book_router.post("/", status_code=status.HTTP_201_CREATED)
+@book_router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict[str, int],
+)
 def create_book(book: BookCreate, connection: Annotated[Connection, Depends(get_db)]):
     type_query = "SELECT id FROM book_type WHERE type = :type;"
 
     insert_query = """
     INSERT INTO book (
-        author_id, title, isbn, publication_date, type_id, page_count
+        user_id, title, publication_date, type_id
     )
     VALUES (
-        :author_id, :title, :isbn, :publication_date, :type_id, :page_count
+        :user_id, :title, :publication_date, :type_id
     ) RETURNING id;
     """
 
@@ -95,7 +97,7 @@ def create_book(book: BookCreate, connection: Annotated[Connection, Depends(get_
     result = connection.execute(
         text(insert_query),
         {
-            "author_id": book.author_id,
+            "user_id": book.user_id,
             "title": book.title,
             "isbn": str(book.isbn),
             "publication_date": book.publication_date,
@@ -120,12 +122,10 @@ def update_book(
 
     update_query = """
     UPDATE book
-    SET author_id = :author_id,
+    SET user_id = :user_id,
         title = :title,
-        isbn = :isbn,
         publication_date = :publication_date,
         type_id = :type_id,
-        page_count = :page_count
     WHERE id = :book_id;
     """
 
@@ -141,7 +141,7 @@ def update_book(
     result = connection.execute(
         text(update_query),
         {
-            "author_id": book.author_id,
+            "user_id": book.user_id,
             "title": book.title,
             "isbn": str(book.isbn),
             "publication_date": book.publication_date,

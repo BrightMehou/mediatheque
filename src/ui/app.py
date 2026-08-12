@@ -13,12 +13,12 @@ def load_types() -> list[dict]:
     return response.json()
 
 
-def load_books(types: list[str] | None = None, author: str | None = None) -> list[dict]:
+def load_books(types: list[str] | None = None, user: str | None = None) -> list[dict]:
     params = {}
     if types:
         params["types"] = types
-    if author:
-        params["author"] = author
+    if user:
+        params["user"] = user
 
     response = requests.get(f"{API_BASE_URL}/book", params=params, timeout=30)
     response.raise_for_status()
@@ -36,9 +36,9 @@ try:
         options=[t["type"] for t in types],
     )
 
-    author = st.text_input("Auteur (pseudonyme)")
+    user = st.text_input("Auteur (pseudonyme)")
 
-    livres = load_books(types=type_selectionnes, author=author)
+    livres = load_books(types=type_selectionnes, user=user)
     st.dataframe(livres)
 
 except Exception as e:

@@ -34,7 +34,11 @@ def get_book_types(connection: Annotated[Connection, Depends(get_db)]):
     return result.mappings().all()
 
 
-@book_type_router.post("/", status_code=status.HTTP_201_CREATED)
+@book_type_router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict[str, int],
+)
 def create_book_type(
     book_type: BookTypeCreate,
     connection: Annotated[Connection, Depends(get_db)],

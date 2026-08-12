@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
         logger.info("Truncating tables...")
         connection.execute(
-            text("TRUNCATE TABLE book, author, book_type RESTART IDENTITY CASCADE"),
+            text("TRUNCATE TABLE book, users, book_type RESTART IDENTITY CASCADE"),
         )
 
         logger.info("Insertion des types de livres")
@@ -53,25 +53,27 @@ if __name__ == "__main__":
             [{"type": type_name} for type_name in LIVRE_TYPES],
         )
 
-        logger.info("Insertion des auteurs")
+        logger.info("Insertion des utilisateurs")
         connection.execute(
             text(
-                "INSERT INTO author (first_name, last_name, pseudonym) VALUES (:first_name, :last_name, :pseudonym)",
+                "INSERT INTO users (first_name, last_name, pseudonym, email, password) VALUES (:first_name, :last_name, :pseudonym, :email, :password)",
             ),
             [
                 {
                     "first_name": fake.first_name(),
                     "last_name": fake.last_name(),
                     "pseudonym": fake.user_name(),
+                    "email": fake.unique.email(),
+                    "password": fake.password(),
                 }
                 for _ in range(100)
             ],
         )
 
-        author_ids = [
+        users_ids = [
             row._mapping["id"]
             for row in connection.execute(
-                text("SELECT id FROM author ORDER BY id"),
+                text("SELECT id FROM users ORDER BY id"),
             ).fetchall()
         ]
 
@@ -85,20 +87,18 @@ if __name__ == "__main__":
         logger.info("Insertion des livres")
         connection.execute(
             text(
-                "INSERT INTO book (author_id, title, isbn, publication_date, type_id, page_count) "
-                "VALUES (:author_id, :title, :isbn, :publication_date, :type_id, :page_count)",
+                "INSERT INTO book (user_id, title, publication_date, type_id) "
+                "VALUES (:user_id, :title, :publication_date, :type_id)",
             ),
             [
                 {
-                    "author_id": random.choice(author_ids),
+                    "user_id": random.choice(users_ids),
                     "title": fake.sentence(),
-                    "isbn": fake.isbn13(separator=""),
                     "publication_date": fake.date_between(
                         start_date="-10y",
                         end_date="today",
                     ),
                     "type_id": random.choice(book_type_ids),
-                    "page_count": fake.random_int(min=50, max=500),
                 }
                 for _ in range(5000)
             ],
