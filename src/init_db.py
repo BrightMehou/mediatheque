@@ -19,41 +19,49 @@ Faker.seed(42)
 BASE_DIR = Path(__file__).resolve().parent
 SQL_FILE = BASE_DIR.parent / "database" / "create_table.sql"
 
-LIVRE_TYPES = [
-    "Art / Illustration",
-    "Bande dessinée",
-    "Biographie",
-    "Comics",
-    "Essai",
-    "Manga",
-    "Manhwa",
-    "Manhua",
-    "Nouvelle",
-    "Recueil",
-    "Roman",
-    "Théâtre",
+TOPICS = [
+    "Art",
+    "Culture",
+    "Économie",
+    "Éducation",
+    "Environnement",
+    "Géographie",
+    "Histoire",
+    "Informatique",
+    "Langues",
+    "Littérature",
+    "Médecine",
+    "Philosophie",
+    "Politique",
+    "Religion",
+    "Sciences",
+    "Société",
+    "Sports",
+    "Technologie",
+    "Transports",
+    "Vie quotidienne",
 ]
 
 if __name__ == "__main__":
-    logger.info("Connexion à la base de données...")
+    logger.info("DB initialization started...")
 
     with engine.begin() as connection:
-        logger.info("Création des tables...")
+        logger.info("TABLE CREATION")
         sql_text = SQL_FILE.read_text(encoding="utf-8")
         connection.exec_driver_sql(sql_text)
 
         logger.info("Truncating tables...")
         connection.execute(
-            text("TRUNCATE TABLE book, users, book_type RESTART IDENTITY CASCADE"),
+            text("TRUNCATE TABLE page, users, topic RESTART IDENTITY CASCADE"),
         )
 
-        logger.info("Insertion des types de livres")
+        logger.info("Topics insertion")
         connection.execute(
-            text("INSERT INTO book_type (type) VALUES (:type)"),
-            [{"type": type_name} for type_name in LIVRE_TYPES],
+            text("INSERT INTO topic (topic) VALUES (:topic)"),
+            [{"topic": topic_name} for topic_name in TOPICS],
         )
 
-        logger.info("Insertion des utilisateurs")
+        logger.info("Users insertion")
         connection.execute(
             text(
                 "INSERT INTO users (first_name, last_name, pseudonym, email, password) VALUES (:first_name, :last_name, :pseudonym, :email, :password)",
@@ -66,7 +74,7 @@ if __name__ == "__main__":
                     "email": fake.unique.email(),
                     "password": fake.password(),
                 }
-                for _ in range(100)
+                for _ in range(30)
             ],
         )
 
@@ -77,18 +85,18 @@ if __name__ == "__main__":
             ).fetchall()
         ]
 
-        book_type_ids = [
+        topic_ids = [
             row._mapping["id"]
             for row in connection.execute(
-                text("SELECT id FROM book_type ORDER BY id"),
+                text("SELECT id FROM topic ORDER BY id"),
             ).fetchall()
         ]
 
-        logger.info("Insertion des livres")
+        logger.info("Pages insertion")
         connection.execute(
             text(
-                "INSERT INTO book (user_id, title, publication_date, type_id) "
-                "VALUES (:user_id, :title, :publication_date, :type_id)",
+                "INSERT INTO page (user_id, title, publication_date, content, topic_id) "
+                "VALUES (:user_id, :title, :publication_date, :content, :topic_id)",
             ),
             [
                 {
@@ -98,10 +106,11 @@ if __name__ == "__main__":
                         start_date="-10y",
                         end_date="today",
                     ),
-                    "type_id": random.choice(book_type_ids),
+                    "content": fake.text(),
+                    "topic_id": random.choice(topic_ids),
                 }
-                for _ in range(5000)
+                for _ in range(1000)
             ],
         )
 
-    logger.info("Deconnexion de la base de données...")
+    logger.info("DB initialization completed successfully.")

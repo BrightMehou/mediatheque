@@ -7,39 +7,39 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 
 @st.cache_data
-def load_types() -> list[dict]:
-    response = requests.get(f"{API_BASE_URL}/book_type", timeout=30)
+def load_topics() -> list[dict]:
+    response = requests.get(f"{API_BASE_URL}/topic", timeout=30)
     response.raise_for_status()
     return response.json()
 
 
-def load_books(types: list[str] | None = None, user: str | None = None) -> list[dict]:
+def load_pages(topics: list[str] | None = None, user: str | None = None) -> list[dict]:
     params = {}
-    if types:
-        params["types"] = types
+    if topics:
+        params["topics"] = topics
     if user:
         params["user"] = user
 
-    response = requests.get(f"{API_BASE_URL}/book", params=params, timeout=30)
+    response = requests.get(f"{API_BASE_URL}/page", params=params, timeout=30)
     response.raise_for_status()
     return response.json()
 
 
-st.set_page_config(page_title="Médiathèque", page_icon="📚", layout="wide")
-st.title("📚 Médiathèque")
+st.set_page_config(page_title="Wiki", page_icon="📚", layout="wide")
+st.title("📚 Wiki")
 
 try:
-    types = load_types()
+    topics = load_topics()
 
-    type_selectionnes = st.multiselect(
-        "Choisissez un type de livre :",
-        options=[t["type"] for t in types],
+    topic_selectionnes = st.multiselect(
+        "Choisissez un thème :",
+        options=[t["topic"] for t in topics],
     )
 
     user = st.text_input("Auteur (pseudonyme)")
 
-    livres = load_books(types=type_selectionnes, user=user)
-    st.dataframe(livres)
+    pages = load_pages(topics=topic_selectionnes, user=user)
+    st.dataframe(pages)
 
 except Exception as e:
     st.error(f"Erreur: {e}")

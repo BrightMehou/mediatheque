@@ -7,6 +7,12 @@ END;
 
 $$ LANGUAGE plpgsql;
 
+DROP TABLE IF EXISTS users CASCADE;
+
+DROP TABLE IF EXISTS topic CASCADE;
+
+DROP TABLE IF EXISTS page CASCADE;
+
 CREATE TABLE IF NOT EXISTS users (
     id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT NOW(),
@@ -19,15 +25,15 @@ CREATE TABLE IF NOT EXISTS users (
     password text NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS book_type (
+CREATE TABLE IF NOT EXISTS topic (
     id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT NOW(),
     updated_at timestamptz NOT NULL DEFAULT NOW(),
     deleted_at timestamptz,
-    type text NOT NULL UNIQUE
+    topic text NOT NULL UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS book (
+CREATE TABLE IF NOT EXISTS page (
     id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     created_at timestamptz NOT NULL DEFAULT NOW(),
     updated_at timestamptz NOT NULL DEFAULT NOW(),
@@ -35,7 +41,8 @@ CREATE TABLE IF NOT EXISTS book (
     user_id integer REFERENCES users(id) NOT NULL,
     title text NOT NULL,
     publication_date date,
-    type_id integer REFERENCES book_type(id)
+    content text,
+    topic_id integer REFERENCES topic(id)
 );
 
 DROP TRIGGER IF EXISTS set_updated_at_on_users ON users;
@@ -44,14 +51,14 @@ CREATE TRIGGER set_updated_at_on_users BEFORE
 UPDATE
     ON users FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-DROP TRIGGER IF EXISTS set_updated_at_on_book_type ON book_type;
+DROP TRIGGER IF EXISTS set_updated_at_on_topic ON topic;
 
-CREATE TRIGGER set_updated_at_on_book_type BEFORE
+CREATE TRIGGER set_updated_at_on_topic BEFORE
 UPDATE
-    ON book_type FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    ON topic FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-DROP TRIGGER IF EXISTS set_updated_at_on_book ON book;
+DROP TRIGGER IF EXISTS set_updated_at_on_page ON page;
 
-CREATE TRIGGER set_updated_at_on_book BEFORE
+CREATE TRIGGER set_updated_at_on_page BEFORE
 UPDATE
-    ON book FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    ON page FOR EACH ROW EXECUTE FUNCTION set_updated_at();

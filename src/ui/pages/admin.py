@@ -11,61 +11,61 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 
 @st.cache_data
-def load_types() -> list[dict]:
-    response = requests.get(f"{API_BASE_URL}/book_type", timeout=30)
+def load_topics() -> list[dict]:
+    response = requests.get(f"{API_BASE_URL}/topic", timeout=30)
     response.raise_for_status()
     return response.json()
 
 
-@st.dialog("Ajouter un type de livre")
-def create_type() -> None:
-    new_type = st.text_input("Type de livre")
+@st.dialog("Ajouter un thème")
+def create_topic() -> None:
+    new_topic = st.text_input("Thème")
     if st.button("Ajouter"):
         response = requests.post(
-            f"{API_BASE_URL}/book_type/",
-            json={"type": new_type},
+            f"{API_BASE_URL}/topic/",
+            json={"topic": new_topic},
             timeout=30,
         )
         response.raise_for_status()
         logger.info("Création OK: %s", response.json())
-        load_types.clear()
+        load_topics.clear()
         st.rerun()
 
 
-st.set_page_config(page_title="Médiathèque - Admin", page_icon="⚙️", layout="wide")
-st.title("⚙️ Administration de la Médiathèque")
+st.set_page_config(page_title="Wiki - Admin", page_icon="⚙️", layout="wide")
+st.title("⚙️ Administration du Wiki")
 
 try:
-    if st.button("Ajouter un type de livre"):
-        create_type()
+    if st.button("Ajouter un thème"):
+        create_topic()
 
-    livre_types = load_types()
+    topics = load_topics()
     event = st.dataframe(
-        livre_types,
+        topics,
         on_select="rerun",
         selection_mode="single-row",
-        column_order=("type",),
+        column_order=("topic",),
     )
 
     row = event.selection.rows
     if row:
         selected_index = row[0]
-        record = livre_types[selected_index]
+        record = topics[selected_index]
 
-        with st.form("Modifier le type de livre"):
-            new_type = st.text_input("Type de livre", value=record["type"])
+        with st.form("Modifier le thème"):
+            new_topic = st.text_input("Thème", value=record["topic"])
             submitted = st.form_submit_button("Modifier")
 
             if submitted:
                 with st.spinner("Modification en cours..."):
                     response = requests.put(
-                        f"{API_BASE_URL}/book_type/{record['id']}",
-                        json={"type": new_type},
+                        f"{API_BASE_URL}/topic/{record['id']}",
+                        json={"topic": new_topic},
                         timeout=30,
                     )
                     response.raise_for_status()
-                    logger.info("Modification du type %s réussie", record["id"])
-                    load_types.clear()
+                    logger.info("Modification du thème %s réussie", record["id"])
+                    load_topics.clear()
                     st.rerun()
 
 except Exception as e:
