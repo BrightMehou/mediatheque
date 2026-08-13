@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
+from sqlalchemy import text
 
 from src.api.main import app
 from src.db.connection import get_db
@@ -28,19 +29,19 @@ def mock_db_conn(mocker: MockerFixture) -> Generator[MagicMock]:
     app.dependency_overrides.clear()
 
 
-# @pytest.fixture(autouse=True)
-# def clean_database():
-#     """Nettoie la table topic avant chaque test."""
-#     db = get_db()
-#     connection = next(db)
+@pytest.fixture(autouse=True, scope="session")
+def clean_database():
+    """Nettoie la table topic avant chaque test."""
+    db = get_db()
+    connection = next(db)
 
-#     connection.execute(
-#         text(
-#             """
-#             TRUNCATE TABLE topic RESTART IDENTITY CASCADE;
-#             """
-#         )
-#     )
-#     connection.commit()
+    connection.execute(
+        text(
+            """
+            TRUNCATE TABLE topic RESTART IDENTITY CASCADE;
+            """
+        )
+    )
+    connection.commit()
 
-#     yield
+    yield
